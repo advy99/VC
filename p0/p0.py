@@ -9,6 +9,8 @@ author: Antonio David Villegas Yeguas
 import matplotlib.pyplot as plt
 import cv2 as cv
 
+
+
 """
  Ejercicio 1:
 
@@ -20,37 +22,47 @@ import cv2 as cv
     Leer un fichero como una imagen usando OpenCV.
 
   Argumentos:
-    filename: Ruta a la imagen
+    fichero: Ruta a la imagen
     flag_color: Modo de color a leer (0: B/N, 1: Color)
 
 """
-def lee_imagen (filename, flag_color=None):
-  imagen = cv.imread(filename, flag_color)
+def lee_imagen_fichero (fichero, flag_color):
+	imagen = cv.imread(fichero, flag_color)
 
-  return imagen
-
-
-def mostrar_imagen(titulo, imagen):
-  cv.namedWindow(titulo, cv.WINDOW_NORMAL)
-  cv.imshow(titulo, imagen)
-  cv.waitKey(0)
-  cv.destroyAllWindows()
-
-  # Si OpenCV da error
-  # plt.imshow(imagen)
-  # plt.show()
+	return imagen
 
 
-filename = "images/orapple.jpg"
+def mostrar_imagen(imagen, titulo=""):
+	cv.namedWindow(titulo, cv.WINDOW_NORMAL)
+	cv.imshow(titulo, imagen)
+	cv.waitKey(0)
+	cv.destroyAllWindows()
+
+	# Si OpenCV da error
+	# plt.imshow(imagen)
+	# plt.show()
+
+def leeimagen(fichero, color_flag):
+	imagen = lee_imagen_fichero(fichero, color_flag)
+	mostrar_imagen(imagen)
 
 
-imagen_leida = lee_imagen(filename, 0)
-
-mostrar_imagen("Imagen leida B/N", imagen_leida)
 
 
-imagen_leida_color = lee_imagen(filename, 1)
 
-mostrar_imagen("Imagen leida C", imagen_leida_color)
+print("Ejercicio 1:")
+
+
+color_flag = 0
+leeimagen("imagenes/orapple.jpg", color_flag)
+
+color_flag = 1
+leeimagen("imagenes/orapple.jpg", color_flag)
+
 
 input("\n-------Pulsa una tecla para continuar-------\n")
+
+
+
+
+print("Ejercicio 2:")
