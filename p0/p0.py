@@ -82,9 +82,21 @@ def pintaI(imagen):
 
 	img_normalizada = img_normalizada.astype(np.float64)
 
+	# si es monobanda la convertimos a tribanda apilando dos veces en profundidad
+	# la misma imagen
+	if img_normalizada.ndim == 2:
+		img_normalizada = np.dstack((np.copy(imagen), np.copy(imagen)))
+		img_normalizada = np.dstack((img_normalizada, np.copy(imagen)))
+
+
 	# si el numero es negativo, al hacer - (-minimo), lo va a sumar hasta llegar 0
 	# luego no hay perdida de información
-	img_normalizada = (img_normalizada - minimo) / (maximo - minimo)
+	if maximo - minimo != 0:
+		img_normalizada = (img_normalizada - minimo) / (maximo - minimo)
+	else:
+		# en caso de que sean todos iguales, interpretamos que la imagen es todo
+		# negro
+		img_normalizada = img_normalizada - minimo
 
 	# al hacerle la operación de forma matricial, no hay que tener en cuenta si
 	# es monobanda o es tribanda
@@ -109,3 +121,56 @@ imagen_tribanda = np.random.randn(500,500,3) * 5
 mostrar_imagen(pintaI(imagen_tribanda))
 
 input("\n-------Pulsa una tecla para continuar-------\n")
+
+print('Probando con una de las imagenes dadas')
+imagen = lee_imagen_fichero("imagenes/orapple.jpg",1)
+
+mostrar_imagen(pintaI(imagen))
+input("\n-------Pulsa una tecla para continuar-------\n")
+
+
+
+
+print("Ejercicio 3")
+
+
+def pintaIM(vim):
+
+	num_imagenes = len(vim)
+
+	alturas = []
+
+	for i in range(0, num_imagenes):
+		alturas.append( vim[i].shape[0])
+
+	altura_maxima = np.max( alturas )
+
+	# cogemos la primera imagen normalizada
+	imagen_final = pintaI(vim[0])
+
+	if imagen_final.shape[0] < altura_maxima:
+		filas_restantes = altura_maxima - imagen_final.shape[0]
+		imagen_final = np.vstack((imagen_final, np.ones(filas_restantes, imagen_final.shape[1]) ))
+
+	for i in range(1, num_imagenes):
+		# para las siguientes imagenes, las normalizamos
+		img = pintaI(vim[i])
+
+		# si les faltan filas, añadimos las restantes como un borde negro
+		if img.shape[0] < altura_maxima:
+			filas_restantes = altura_maxima - img.shape[0]
+			franja_negra = np.ones( (filas_restantes, img.shape[1]))
+			franja_negra = pintaI(franja_negra)
+			img = np.vstack((img, franja_negra ))
+
+		imagen_final = np.hstack((imagen_final, img))
+
+	mostrar_imagen(imagen_final)
+
+
+imagen1 = lee_imagen_fichero("imagenes/orapple.jpg", 1)
+imagen2 = lee_imagen_fichero("imagenes/messi.jpg", 1)
+
+imagenes = [imagen1, imagen2]
+
+pintaIM(imagenes)
