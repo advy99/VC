@@ -8,6 +8,9 @@ author: Antonio David Villegas Yeguas
 
 import matplotlib.pyplot as plt
 import cv2 as cv
+import numpy as np
+
+np.random.seed(1)
 
 
 
@@ -66,3 +69,43 @@ input("\n-------Pulsa una tecla para continuar-------\n")
 
 
 print("Ejercicio 2:")
+
+
+def pintaI(imagen):
+
+	# trabajamos en una copia de la imagen
+	img_normalizada = np.copy(imagen)
+
+	# sacamos el minimo y el maximo de todos los valores
+	minimo = np.min(img_normalizada)
+	maximo = np.max(img_normalizada)
+
+	img_normalizada = img_normalizada.astype(np.float64)
+
+	# si el numero es negativo, al hacer - (-minimo), lo va a sumar hasta llegar 0
+	# luego no hay perdida de información
+	img_normalizada = (img_normalizada - minimo) / (maximo - minimo)
+
+	# al hacerle la operación de forma matricial, no hay que tener en cuenta si
+	# es monobanda o es tribanda
+
+	return img_normalizada
+
+
+
+#imagen = lee_imagen_fichero("imagenes/orapple.jpg", 1)
+
+print("Probando con matriz aleatoria como imagen monobanda")
+imagen_monobanda = np.random.randn(500,500,1) * 5
+
+mostrar_imagen(pintaI(imagen_monobanda))
+
+input("\n-------Pulsa una tecla para continuar-------\n")
+
+
+print("Probando con matriz aleatoria como imagen tribanda")
+imagen_tribanda = np.random.randn(500,500,3) * 5
+
+mostrar_imagen(pintaI(imagen_tribanda))
+
+input("\n-------Pulsa una tecla para continuar-------\n")
