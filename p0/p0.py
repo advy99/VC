@@ -172,8 +172,11 @@ def pintaIM(vim):
 	imagen_final = pintaI(vim[0])
 
 	if imagen_final.shape[0] < altura_maxima:
-		filas_restantes = altura_maxima - imagen_final.shape[0]
-		imagen_final = np.vstack((imagen_final, np.ones(filas_restantes, imagen_final.shape[1]) ))
+		filas_restantes = altura_maxima - vim[0].shape[0]
+		franja_negra = np.ones( (filas_restantes, vim[0].shape[1]))
+		franja_negra = pintaI(franja_negra)
+		imagen_final = np.vstack((imagen_final, franja_negra ))
+
 
 	for i in range(1, num_imagenes):
 		# para las siguientes imagenes, las normalizamos
@@ -194,7 +197,7 @@ def pintaIM(vim):
 imagen1 = lee_imagen_fichero("imagenes/orapple.jpg", 1)
 imagen2 = lee_imagen_fichero("imagenes/messi.jpg", 1)
 
-imagenes = [imagen1, imagen2]
+imagenes = [imagen2, imagen1]
 
 pintaIM(imagenes)
 
