@@ -17,6 +17,8 @@ np.random.seed(1)
 """
  Ejercicio 1:
 
+Escribir una función que lea el fichero de una imagen permita mostrarlatanto
+en grises como en color (im=leeimagen(filename, flagColor))
 
 """
 
@@ -66,6 +68,17 @@ leeimagen("imagenes/orapple.jpg", color_flag)
 input("\n-------Pulsa una tecla para continuar-------\n")
 
 
+
+"""
+
+Ejercicio 2:
+
+Escribir una función que visualice una matriz de números reales cualquiera ya
+sea monobanda o tribanda (pintaI(im)). Para ello deberá de trasladar y escalar
+el rango de cada banda al intervalo [0,1] sin pérdida de información.
+
+
+"""
 
 
 print("Ejercicio 2:")
@@ -131,6 +144,16 @@ input("\n-------Pulsa una tecla para continuar-------\n")
 
 
 
+"""
+Ejercicio 3:
+
+Escribir una función que visualice varias imágenes a la vez(fusionando las
+imágenes en una última imagen final): pintaMI(vim).(vim será una secuencia de
+imágenes) ¿Qué pasa si las imágenes no son todas del mismo tipo(nivel de gris,
+color, blanco-negro)?
+
+"""
+
 print("Ejercicio 3")
 
 
@@ -174,3 +197,30 @@ imagen2 = lee_imagen_fichero("imagenes/messi.jpg", 1)
 imagenes = [imagen1, imagen2]
 
 pintaIM(imagenes)
+
+
+
+"""
+Ejercicio 4:
+
+Escribir unafunción que modifique el coloren la imagen de cada uno de los
+elementos de una lista de coordenadas de píxeles. (Recordarque (fila, columna)
+es lo contrario a (x,y). Es decir fila=y, columna=x)
+
+"""
+
+
+print("Ejercicio 4:")
+
+
+def modificar_color(imagen, coordenadas_a_modificar, color):
+	resultado = np.copy(imagen)
+
+	for coordenada in coordenadas_a_modificar:
+		x, y = coordenada
+
+		# y, x en lugar de x, y, porque en las imagenes las filas son las
+		# columnas de la matriz
+		resultado[y, x] = nuevo_color
+
+	return resultado
