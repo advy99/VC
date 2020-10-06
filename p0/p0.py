@@ -6,6 +6,17 @@ VC: Práctica 0
 author: Antonio David Villegas Yeguas
 """
 
+#para colab
+#from google.colab.patches import cv2_imshow
+#from google.colab import drive
+#drive.mount("/content/drive")
+
+# para ejecutar en colab, poner la ruta a la carpeta de imagenes
+# acabando en / y sin incluir la propia carpeta 'imagenes/<imagen>'
+#RUTA_DRIVE="./drive/My Drive/VC/"
+
+RUTA_DRIVE=""
+
 import matplotlib.pyplot as plt
 import cv2 as cv
 import numpy as np
@@ -41,14 +52,13 @@ def lee_imagen_fichero(fichero, flag_color):
 
 
 def mostrar_imagen(imagen, titulo=""):
-    cv.namedWindow(titulo, cv.WINDOW_NORMAL)
-    cv.imshow(titulo, imagen)
-    cv.waitKey()
-    cv.destroyAllWindows()
+    plt.title(titulo)
+    if imagen.ndim == 3 and imagen.shape[2] >= 3:
+        plt.imshow(imagen[:,:,::-1])
+    else:
+        plt.imshow(imagen, cmap='gray')
+    plt.show()
 
-	 # Si OpenCV da error
-	 # plt.imshow(imagen)
-	 # plt.show()
 
 def leeimagen(fichero, color_flag):
     imagen = lee_imagen_fichero(fichero, color_flag)
@@ -62,10 +72,10 @@ print("Ejercicio 1:")
 
 
 color_flag = 0
-leeimagen("imagenes/orapple.jpg", color_flag)
+leeimagen(RUTA_DRIVE+"imagenes/orapple.jpg", color_flag)
 
 color_flag = 1
-leeimagen("imagenes/orapple.jpg", color_flag)
+leeimagen(RUTA_DRIVE+"imagenes/orapple.jpg", color_flag)
 
 
 input("\n-------Pulsa una tecla para continuar-------\n")
@@ -96,11 +106,9 @@ def normaliza_imagen(imagen):
     minimo = np.min(img_normalizada)
     maximo = np.max(img_normalizada)
 
-    img_normalizada = img_normalizada.astype(np.float64)
-
     # si es monobanda la convertimos a tribanda apilando dos veces en profundidad
     # la misma imagen
-    if img_normalizada.ndim == 2:
+    if img_normalizada.ndim != 3 or img_normalizada.shape[2] < 3:
         img_normalizada = np.dstack((np.copy(imagen), np.copy(imagen)))
         img_normalizada = np.dstack((img_normalizada, np.copy(imagen)))
 
@@ -123,7 +131,7 @@ def pintaI(imagen):
     normalizada = normaliza_imagen(imagen)
     mostrar_imagen(normalizada)
 
-#imagen = lee_imagen_fichero("imagenes/orapple.jpg", 1)
+#imagen = lee_imagen_fichero(RUTA_DRIVE+"imagenes/orapple.jpg", 1)
 
 print("Probando con matriz aleatoria como imagen monobanda")
 imagen_monobanda = np.random.randn(500,500,1) * 5
@@ -141,7 +149,7 @@ pintaI(imagen_tribanda)
 input("\n-------Pulsa una tecla para continuar-------\n")
 
 print('Probando con una de las imagenes dadas')
-imagen = lee_imagen_fichero("imagenes/orapple.jpg",1)
+imagen = lee_imagen_fichero(RUTA_DRIVE+"imagenes/orapple.jpg",1)
 
 pintaI(imagen)
 
@@ -205,8 +213,8 @@ def pintaMI(imagenes, titulo=None):
 
 print("Uniendo imagenes orapple.jpg y messi.jpg")
 
-imagen1 = lee_imagen_fichero("imagenes/orapple.jpg", 1)
-imagen2 = lee_imagen_fichero("imagenes/messi.jpg", 1)
+imagen1 = lee_imagen_fichero(RUTA_DRIVE+"imagenes/orapple.jpg", 1)
+imagen2 = lee_imagen_fichero(RUTA_DRIVE+"imagenes/messi.jpg", 1)
 
 imagenes = [imagen2, imagen1]
 
@@ -243,7 +251,7 @@ def modificar_color(imagen, coordenadas_a_modificar, nuevo_color):
 
     return resultado
 
-imagen = lee_imagen_fichero("imagenes/orapple.jpg", 1)
+imagen = lee_imagen_fichero(RUTA_DRIVE+"imagenes/orapple.jpg", 1)
 imagen = normaliza_imagen(imagen)
 
 color = np.array([0.74509803921, 0.74901960784, 0.96862745098], np.float64)
@@ -278,8 +286,8 @@ def pintaMI_con_titulo(imagen, titulo):
 
 print("Uniendo imagenes orapple.jpg y messi.jpg (ahora con titulo)")
 
-imagen1 = lee_imagen_fichero("imagenes/orapple.jpg", 1)
-imagen2 = lee_imagen_fichero("imagenes/messi.jpg", 1)
+imagen1 = lee_imagen_fichero(RUTA_DRIVE+"imagenes/orapple.jpg", 1)
+imagen2 = lee_imagen_fichero(RUTA_DRIVE+"imagenes/messi.jpg", 1)
 
 imagenes = [imagen2, imagen1]
 
