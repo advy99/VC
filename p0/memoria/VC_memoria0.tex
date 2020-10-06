@@ -27,7 +27,7 @@
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
-    filecolor=magenta,      
+    filecolor=magenta,
     urlcolor=cyan,
 }
 
@@ -105,9 +105,9 @@
 \setmarginsrb{2 cm}{1 cm}{2 cm}{2 cm}{1 cm}{1.5 cm}{1 cm}{1.5 cm}
 
 \title{Práctica 0:\\
-Introducción a OpenCV  \hspace{0.05cm} }                           
-\author{Antonio David Villegas Yeguas}                             
-\date{\today}                                           
+Introducción a OpenCV  \hspace{0.05cm} }
+\author{Antonio David Villegas Yeguas}
+\date{\today}
 
 \renewcommand*\contentsname{hola}
 
@@ -131,17 +131,17 @@ Introducción a OpenCV  \hspace{0.05cm} }
     \centering
     \vspace*{0.3 cm}
     \includegraphics[scale = 0.50]{ugr.png}\\[0.7 cm]
-    %\textsc{\LARGE Universidad de Granada}\\[2.0 cm]   
-    \textsc{\large 4º CSI 2020/21 - Grupo 2}\\[0.5 cm]            
-    \textsc{\large Grado en Ingeniería Informática}\\[0.5 cm]              
+    %\textsc{\LARGE Universidad de Granada}\\[2.0 cm]
+    \textsc{\large 4º CSI 2020/21 - Grupo 2}\\[0.5 cm]
+    \textsc{\large Grado en Ingeniería Informática}\\[0.5 cm]
     \rule{\linewidth}{0.2 mm} \\[0.2 cm]
     { \huge \bfseries \thetitle}\\
     \rule{\linewidth}{0.2 mm} \\[1 cm]
-    
+
     \begin{minipage}{0.4\textwidth}
         \begin{flushleft} \large
             \emph{Autor:}\\
-            \theauthor\\ 
+            \theauthor\\
 			 \emph{DNI:}\\
             77021623-M
             \end{flushleft}
@@ -149,18 +149,18 @@ Introducción a OpenCV  \hspace{0.05cm} }
             \begin{minipage}{0.4\textwidth}
             \begin{flushright} \large
             \emph{Asignatura: \\
-            Visión por Computador}   \\     
+            Visión por Computador}   \\
             \emph{Correo:}\\
-            advy99@correo.ugr.es           
+            advy99@correo.ugr.es
         \end{flushright}
     \end{minipage}\\[0.5cm]
-  
+
     {\large \thedate}\\[0.5cm]
     %{\url{https://github.com/advy99/AA/}}
     {\doclicenseThis}
- 	
+
     \vfill
-    
+
 \end{titlepage}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -173,6 +173,98 @@ Introducción a OpenCV  \hspace{0.05cm} }
 
 \section*{Introducción}
 
+Esta práctica trata sobre el uso de las herramientas que utilizaremos a lo largo del curso para el desarrollo de la asignatura, en concreto Python, OpenCV y la plataforma Colab principalmente, aunque nos apoyaremos en otras bibliotecas como NumPy, MatPlotLib, entre otras.
+
+En esta práctica de introducción se nos plantean cinco ejercicios que debemos resolver haciendo uso de estas herramientas y comprobar que funcionan correctamente tanto en nuestros entornos locales como en la plataforma Colab.
+
+
+En este documento se encuentran las explicaciones de que se ha hecho y el por qué, pero no se apoyarán en el código a no ser que sea estrictamente necesario. Todo el código se encuentra disponible en el fichero \texttt{p0.py}.
+
+\newpage
+
+\section{Ejercicio 1}
+
+\textbf{\large Enunciado: Escribir una función que lea el fichero de una imagen permita mostrarla tanto en grises como en color (\texttt{im=leeimagen(filename, flagColor)})}
+
+
+Para este ejercicio simplemente he implementado la función \texttt{leeimagen}, que pasando una ruta de un fichero lee la imagen utilizando OpenCV, y como segundo parámetro tiene el modo de lectura del color, para este segundo parámetro utilizaremos 0 para leer en blanco y negro y 1 para leer a color, aunque hay disponibles más opciones \cite{read_image_opencv}
+
+Además he creado otra función para visualizar las imágenes de forma que siempre que visualice algo a lo largo de la práctica, utilizaré esta función.
+
+Esta función \texttt{muestra\_imagen} recibe una imagen (una matriz) y opcionalmente un título. Mostrará la imagen en una ventana de MatPlotLib con el titulo dado. Esta función comprobará si la imagen es monobanda o tribanda para saber la forma correcta de visualización y si ha de invertir los colores en el caso tribanda, ya que MatPlotLib utiliza el sistema RBG, sin embargo OpenCV lee las imágenes como BGR. He decidido utilizar MatPlotLib ya que, aunque hay que invertir los canales, OpenCV da problemas para su ejecución en Colab.
+
+\section{Ejercicio 2}
+
+\textbf{\large Enunciado: Escribir una función que visualice una matriz de números reales cualquiera ya sea monobanda o tribanda (\texttt{pintaI(im)}). Para ello deberá de trasladar y escalar el rango de cada banda al intervalo [0,1] sin pérdida de información.}
+
+De cara a este ejercicio he realizado dos funciones:
+
+\begin{enumerate}
+	\item \texttt{normalizar\_imagen}: Recibe una imagen. Devuelve una imagen normalizada, es decir, escalada al rango [0,1], con tres bandas y sin perdida de información.
+	\item \texttt{pintaI}: Normaliza una imagen utilizando la función anterior y la muestra por pantalla.
+\end{enumerate}
+
+He realizado la primera función ya que nos será útil al trabajar que todas las imágenes tengan el mismo formato de cara a los próximos ejercicios.
+
+Para normalizar la imagen, he buscado el valor máximo y mínimo de la matriz utilizando \texttt{np.min} y \texttt{np.max}, tras esto he desplazado la matriz para que el valor más pequeño este en el 0, de forma que no perdamos información:
+
+$$ imagen = imagen - valor\_minimo $$
+
+De esta forma, si el valor más pequeño era negativo, se ha sumado hasta llegar a cero, y si es positivo se ha restado, siendo en todo caso cero el nuevo valor.
+
+Tras esto he divido todos los valores por el valor máximo. Este valor máximo también se ha visto desplazado, luego lo tenemos que tener en cuenta.
+
+$$ imagen = imagen / (maximo - minimo) $$
+
+O lo que es equivalente a estas dos operaciones:
+
+$$ imagen = (imagen - minimo) / (maximo - minimo) $$
+
+Otra cosa que he tenido en cuenta es que si el máximo menos el mínimo vale 0, es imposible dividir. En ese caso la imagen es toda de un único color, y como no sabemos en que rango se encontraba he supuesto que es una imagen en negro, y la imagen entera se sustituye por una matriz de unos utilizando \texttt{np.ones}.
+
+De cara a próximos ejercicios he añadido una comprobación de que si la imagen es monobanda se convierte a tribanda triplicando la única banda existente, de esta forma se mantiene la información (los colores son equivalentes al tener el mismo valor tanto en la capa R como en la G y en la B), mientras que podremos realizar operaciones de forma más fácil en los siguientes ejercicios.
+
+
+La segunda función, \texttt{pintaI}, recibe una imagen por parámetro, la cual es normalizada con la función anterior, y muestra por pantalla la imagen normalizada utilizando la función para mostrar imágenes del ejercicio 1.
+
+Para comprobar el funcionamiento he creado dos matrices (una monobanda y otra tribanda) de tamaño 500 por 500 con valores aleatorios obtenidos de una distribución uniforme entre 0 y 1 utilizando el método \texttt{np.random.randn} pero los he multiplicado por 5 para comprobar que mi función es correcta. Estas son las visualizaciones del resultado:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.70]{monobanda.png}
+	\caption{Imagen obtenida de la matriz monobanda.}
+	\label{fig:ej2-mono}
+	
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.70]{tribanda.png}
+	\caption{Imagen obtenida de la matriz tribanda.}
+	\label{fig:ej2-tri}
+	
+\end{figure}
+
+Como vemos, en la imagen monobanda solo observamos tonalidades grises, mientras que en la tribanda si encontramos píxeles de colores.
+
+Además, he aplicado la función a una imagen ya dada para comprobar que sigue visualizando de forma correcta las imágenes.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.70]{ej2-orig.png}
+	\caption{Imagen obtenida de la imagen original.}
+	\label{fig:ej2-tri}
+	
+\end{figure}
+
+\section{Ejercicio 3}
+
+\section{Ejercicio 4}
+
+\section{Ejercicio 5}
+
+\section{Ejecución en Colab}
 
 \newpage
 
@@ -180,6 +272,11 @@ Introducción a OpenCV  \hspace{0.05cm} }
 
 
 \begin{thebibliography}{9}
+
+\bibitem{read_image_opencv}
+Flags lectura de imágenes en OpenCV - Documentación oficial de OpenCV
+
+\url{https://docs.opencv.org/4.4.0/d4/da8/group__imgcodecs.html}
 
 
 \end{thebibliography}
