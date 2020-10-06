@@ -43,7 +43,7 @@ en grises como en color (im=leeimagen(filename, flagColor))
 """
 
 
-def lee_imagen_fichero(fichero, flag_color):
+def leeimagen(fichero, flag_color):
 
     imagen = cv.imread(fichero, flag_color)
 
@@ -60,11 +60,6 @@ def mostrar_imagen(imagen, titulo=""):
     plt.show()
 
 
-def leeimagen(fichero, color_flag):
-    imagen = lee_imagen_fichero(fichero, color_flag)
-    mostrar_imagen(imagen)
-
-
 
 
 
@@ -72,11 +67,12 @@ print("Ejercicio 1:")
 
 
 color_flag = 0
-leeimagen(RUTA_DRIVE+"imagenes/orapple.jpg", color_flag)
+imagen = leeimagen(RUTA_DRIVE+"imagenes/orapple.jpg", color_flag)
+mostrar_imagen(imagen)
 
 color_flag = 1
-leeimagen(RUTA_DRIVE+"imagenes/orapple.jpg", color_flag)
-
+imagen = leeimagen(RUTA_DRIVE+"imagenes/orapple.jpg", color_flag)
+mostrar_imagen(imagen)
 
 input("\n-------Pulsa una tecla para continuar-------\n")
 
@@ -149,7 +145,7 @@ pintaI(imagen_tribanda)
 input("\n-------Pulsa una tecla para continuar-------\n")
 
 print('Probando con una de las imagenes dadas')
-imagen = lee_imagen_fichero(RUTA_DRIVE+"imagenes/orapple.jpg",1)
+imagen = leeimagen(RUTA_DRIVE+"imagenes/orapple.jpg",1)
 
 pintaI(imagen)
 
@@ -213,8 +209,8 @@ def pintaMI(imagenes, titulo=None):
 
 print("Uniendo imagenes orapple.jpg y messi.jpg")
 
-imagen1 = lee_imagen_fichero(RUTA_DRIVE+"imagenes/orapple.jpg", 1)
-imagen2 = lee_imagen_fichero(RUTA_DRIVE+"imagenes/messi.jpg", 1)
+imagen1 = leeimagen(RUTA_DRIVE+"imagenes/orapple.jpg", 1)
+imagen2 = leeimagen(RUTA_DRIVE+"imagenes/messi.jpg", 1)
 
 imagenes = [imagen2, imagen1]
 
@@ -251,7 +247,7 @@ def modificar_color(imagen, coordenadas_a_modificar, nuevo_color):
 
     return resultado
 
-imagen = lee_imagen_fichero(RUTA_DRIVE+"imagenes/orapple.jpg", 1)
+imagen = leeimagen(RUTA_DRIVE+"imagenes/orapple.jpg", 1)
 imagen = normaliza_imagen(imagen)
 
 color = np.array([0.74509803921, 0.74901960784, 0.96862745098], np.float64)
@@ -286,8 +282,8 @@ def pintaMI_con_titulo(imagen, titulo):
 
 print("Uniendo imagenes orapple.jpg y messi.jpg (ahora con titulo)")
 
-imagen1 = lee_imagen_fichero(RUTA_DRIVE+"imagenes/orapple.jpg", 1)
-imagen2 = lee_imagen_fichero(RUTA_DRIVE+"imagenes/messi.jpg", 1)
+imagen1 = leeimagen(RUTA_DRIVE+"imagenes/orapple.jpg", 1)
+imagen2 = leeimagen(RUTA_DRIVE+"imagenes/messi.jpg", 1)
 
 imagenes = [imagen2, imagen1]
 
