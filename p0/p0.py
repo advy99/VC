@@ -13,7 +13,6 @@ import numpy as np
 np.random.seed(1)
 
 
-
 """
  Ejercicio 1:
 
@@ -31,25 +30,29 @@ en grises como en color (im=leeimagen(filename, flagColor))
     flag_color: Modo de color a leer (0: B/N, 1: Color)
 
 """
-def lee_imagen_fichero (fichero, flag_color):
-	imagen = cv.imread(fichero, flag_color)
 
-	return imagen
+
+def lee_imagen_fichero(fichero, flag_color):
+
+    imagen = cv.imread(fichero, flag_color)
+
+    return imagen
+
 
 
 def mostrar_imagen(imagen, titulo=""):
-	cv.namedWindow(titulo, cv.WINDOW_NORMAL)
-	cv.imshow(titulo, imagen)
-	cv.waitKey(0)
-	cv.destroyAllWindows()
+    cv.namedWindow(titulo, cv.WINDOW_NORMAL)
+    cv.imshow(titulo, imagen)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
 
-	# Si OpenCV da error
-	# plt.imshow(imagen)
-	# plt.show()
+  # Si OpenCV da error
+  # plt.imshow(imagen)
+  # plt.show()
 
 def leeimagen(fichero, color_flag):
-	imagen = lee_imagen_fichero(fichero, color_flag)
-	mostrar_imagen(imagen)
+    imagen = lee_imagen_fichero(fichero, color_flag)
+    mostrar_imagen(imagen)
 
 
 
@@ -86,35 +89,35 @@ print("Ejercicio 2:")
 
 def pintaI(imagen):
 
-	# trabajamos en una copia de la imagen
-	img_normalizada = np.copy(imagen)
+    # trabajamos en una copia de la imagen
+    img_normalizada = np.copy(imagen)
 
-	# sacamos el minimo y el maximo de todos los valores
-	minimo = np.min(img_normalizada)
-	maximo = np.max(img_normalizada)
+    # sacamos el minimo y el maximo de todos los valores
+    minimo = np.min(img_normalizada)
+    maximo = np.max(img_normalizada)
 
-	img_normalizada = img_normalizada.astype(np.float64)
+    img_normalizada = img_normalizada.astype(np.float64)
 
-	# si es monobanda la convertimos a tribanda apilando dos veces en profundidad
-	# la misma imagen
-	if img_normalizada.ndim == 2:
-		img_normalizada = np.dstack((np.copy(imagen), np.copy(imagen)))
-		img_normalizada = np.dstack((img_normalizada, np.copy(imagen)))
+    # si es monobanda la convertimos a tribanda apilando dos veces en profundidad
+    # la misma imagen
+    if img_normalizada.ndim == 2:
+        img_normalizada = np.dstack((np.copy(imagen), np.copy(imagen)))
+        img_normalizada = np.dstack((img_normalizada, np.copy(imagen)))
 
 
-	# si el numero es negativo, al hacer - (-minimo), lo va a sumar hasta llegar 0
-	# luego no hay perdida de información
-	if maximo - minimo != 0:
-		img_normalizada = (img_normalizada - minimo) / (maximo - minimo)
-	else:
-		# en caso de que sean todos iguales, interpretamos que la imagen es todo
-		# negro
-		img_normalizada = img_normalizada - minimo
+    # si el numero es negativo, al hacer - (-minimo), lo va a sumar hasta llegar 0
+    # luego no hay perdida de información
+    if maximo - minimo != 0:
+        img_normalizada = (img_normalizada - minimo) / (maximo - minimo)
+    else:
+        # en caso de que sean todos iguales, interpretamos que la imagen es todo
+        # negro
+        img_normalizada = img_normalizada - minimo
 
-	# al hacerle la operación de forma matricial, no hay que tener en cuenta si
-	# es monobanda o es tribanda
+    # al hacerle la operación de forma matricial, no hay que tener en cuenta si
+    # es monobanda o es tribanda
 
-	return img_normalizada
+    return img_normalizada
 
 
 
@@ -159,47 +162,53 @@ print("Ejercicio 3")
 
 def pintaIM(vim):
 
-	num_imagenes = len(vim)
+    num_imagenes = len(vim)
 
-	alturas = []
+    alturas = []
 
-	for i in range(0, num_imagenes):
-		alturas.append( vim[i].shape[0])
+    for i in range(0, num_imagenes):
+        alturas.append( vim[i].shape[0])
 
-	altura_maxima = np.max( alturas )
+    altura_maxima = np.max( alturas )
 
-	# cogemos la primera imagen normalizada
-	imagen_final = pintaI(vim[0])
+        # cogemos la primera imagen normalizada
+    imagen_final = pintaI(vim[0])
 
-	if imagen_final.shape[0] < altura_maxima:
-		filas_restantes = altura_maxima - vim[0].shape[0]
-		franja_negra = np.ones( (filas_restantes, vim[0].shape[1]))
-		franja_negra = pintaI(franja_negra)
-		imagen_final = np.vstack((imagen_final, franja_negra ))
+    if imagen_final.shape[0] < altura_maxima:
+        filas_restantes = altura_maxima - vim[0].shape[0]
+        franja_negra = np.ones( (filas_restantes, vim[0].shape[1]))
+        franja_negra = pintaI(franja_negra)
+        imagen_final = np.vstack((imagen_final, franja_negra ))
 
 
-	for i in range(1, num_imagenes):
-		# para las siguientes imagenes, las normalizamos
-		img = pintaI(vim[i])
+    for i in range(1, num_imagenes):
+        # para las siguientes imagenes, las normalizamos
+        img = pintaI(vim[i])
 
-		# si les faltan filas, añadimos las restantes como un borde negro
-		if img.shape[0] < altura_maxima:
-			filas_restantes = altura_maxima - img.shape[0]
-			franja_negra = np.ones( (filas_restantes, img.shape[1]))
-			franja_negra = pintaI(franja_negra)
-			img = np.vstack((img, franja_negra ))
+        # si les faltan filas, añadimos las restantes como un borde negro
+        if img.shape[0] < altura_maxima:
+            filas_restantes = altura_maxima - img.shape[0]
+            franja_negra = np.ones( (filas_restantes, img.shape[1]))
+            franja_negra = pintaI(franja_negra)
+            img = np.vstack((img, franja_negra ))
 
-		imagen_final = np.hstack((imagen_final, img))
+        imagen_final = np.hstack((imagen_final, img))
 
-	mostrar_imagen(imagen_final)
+    return imagen_final
 
+print("Uniendo imagenes orapple.jpg y messi.jpg")
 
 imagen1 = lee_imagen_fichero("imagenes/orapple.jpg", 1)
 imagen2 = lee_imagen_fichero("imagenes/messi.jpg", 1)
 
 imagenes = [imagen2, imagen1]
 
-pintaIM(imagenes)
+imagen_unida = pintaIM(imagenes)
+
+mostrar_imagen(imagen_unida)
+
+
+input("\n-------Pulsa una tecla para continuar-------\n")
 
 
 
@@ -216,14 +225,31 @@ es lo contrario a (x,y). Es decir fila=y, columna=x)
 print("Ejercicio 4:")
 
 
-def modificar_color(imagen, coordenadas_a_modificar, color):
-	resultado = np.copy(imagen)
+def modificar_color(imagen, coordenadas_a_modificar, nuevo_color):
+    resultado = np.copy(imagen)
 
-	for coordenada in coordenadas_a_modificar:
-		x, y = coordenada
+    for coordenada in coordenadas_a_modificar:
+        x, y = coordenada
 
-		# y, x en lugar de x, y, porque en las imagenes las filas son las
-		# columnas de la matriz
-		resultado[y, x] = nuevo_color
+        # y, x en lugar de x, y, porque en las imagenes las filas son las
+        # columnas de la matriz
+        resultado[y, x] = nuevo_color
 
-	return resultado
+    return resultado
+
+imagen = lee_imagen_fichero("imagenes/orapple.jpg", 1)
+imagen = pintaI(imagen)
+
+color = np.array([0.74509803921, 0.74901960784, 0.96862745098], np.float64)
+
+coordenadas = []
+
+for i in range(0,50):
+    for j in range(0,50):
+        coordenadas.append([i+30,j+30])
+
+
+resultado_ej4 = modificar_color(imagen, coordenadas, color)
+
+mostrar_imagen(resultado_ej4)
+
