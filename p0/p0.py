@@ -7,7 +7,6 @@ author: Antonio David Villegas Yeguas
 """
 
 #para colab
-#from google.colab.patches import cv2_imshow
 #from google.colab import drive
 #drive.mount("/content/drive")
 
@@ -17,10 +16,12 @@ author: Antonio David Villegas Yeguas
 
 RUTA_DRIVE=""
 
+# bibliotecas necesarias
 import matplotlib.pyplot as plt
 import cv2 as cv
 import numpy as np
 
+# fijamos la semilla para que aparezca lo mismo que en el PDF
 np.random.seed(1)
 
 
@@ -53,6 +54,8 @@ def leeimagen(fichero, flag_color):
 
 def mostrar_imagen(imagen, titulo=""):
     plt.title(titulo)
+    # si la imagen es tribanda, tenemos que invertir los canales B y R
+    # si es en blanco y negro, tenemos que decirle a matplotlib que es monobanda
     if imagen.ndim == 3 and imagen.shape[2] >= 3:
         plt.imshow(imagen[:,:,::-1])
     else:

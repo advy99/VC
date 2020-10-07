@@ -191,7 +191,7 @@ Para este ejercicio simplemente he implementado la función \texttt{leeimagen}, 
 
 Además he creado otra función para visualizar las imágenes de forma que siempre que visualice algo a lo largo de la práctica, utilizaré esta función.
 
-Esta función \texttt{muestra\_imagen} recibe una imagen (una matriz) y opcionalmente un título. Mostrará la imagen en una ventana de MatPlotLib con el titulo dado. Esta función comprobará si la imagen es monobanda o tribanda para saber la forma correcta de visualización y si ha de invertir los colores en el caso tribanda, ya que MatPlotLib utiliza el sistema RBG, sin embargo OpenCV lee las imágenes como BGR. He decidido utilizar MatPlotLib ya que, aunque hay que invertir los canales, OpenCV da problemas para su ejecución en Colab.
+Esta función \texttt{muestra\_imagen} recibe una imagen (una matriz) y opcionalmente un título. Mostrará la imagen en una ventana de MatPlotLib con el titulo dado. Esta función comprobará si la imagen es monobanda o tribanda para saber la forma correcta de visualización y si ha de invertir los colores en el caso tribanda, ya que MatPlotLib utiliza el sistema RBG, sin embargo OpenCV lee las imágenes como BGR\cite{BGR_cv}. He decidido utilizar MatPlotLib ya que, aunque hay que invertir los canales, OpenCV da problemas para su ejecución en Colab.
 
 \section{Ejercicio 2}
 
@@ -206,7 +206,7 @@ De cara a este ejercicio he realizado dos funciones:
 
 He realizado la primera función ya que nos será útil al trabajar que todas las imágenes tengan el mismo formato de cara a los próximos ejercicios.
 
-Para normalizar la imagen, he buscado el valor máximo y mínimo de la matriz utilizando \texttt{np.min} y \texttt{np.max}, tras esto he desplazado la matriz para que el valor más pequeño este en el 0, de forma que no perdamos información:
+Para normalizar la imagen, he buscado el valor máximo y mínimo de la matriz utilizando \texttt{np.min} y \texttt{np.max}\cite{np_min_max}, tras esto he desplazado la matriz para que el valor más pequeño este en el 0, de forma que no perdamos información:
 
 $$ imagen = imagen - valor\_minimo $$
 
@@ -220,14 +220,16 @@ O lo que es equivalente a estas dos operaciones:
 
 $$ imagen = (imagen - minimo) / (maximo - minimo) $$
 
-Otra cosa que he tenido en cuenta es que si el máximo menos el mínimo vale 0, es imposible dividir. En ese caso la imagen es toda de un único color, y como no sabemos en que rango se encontraba he supuesto que es una imagen en negro, y la imagen entera se sustituye por una matriz de unos utilizando \texttt{np.ones}.
+Otra cosa que he tenido en cuenta es que si el máximo menos el mínimo vale 0, es imposible dividir. En ese caso la imagen es toda de un único color, y como no sabemos en que rango se encontraba he supuesto que es una imagen en negro, y la imagen entera se sustituye por una matriz de unos utilizando \texttt{np.ones}\cite{np_ones}.
 
 De cara a próximos ejercicios he añadido una comprobación de que si la imagen es monobanda se convierte a tribanda triplicando la única banda existente, de esta forma se mantiene la información (los colores son equivalentes al tener el mismo valor tanto en la capa R como en la G y en la B), mientras que podremos realizar operaciones de forma más fácil en los siguientes ejercicios.
 
 
+He decidido escoger el máximo y el mínimo de todas las bandas y escalarlo todo usando esos valores ya que si por algún motivo la imagen en una de las bandas no utiliza el valor más alto perderíamos información, por ejemplo, si las bandas van de 0 a 255, pero el valor más alto de azul es 170, si normalizamos la banda azul a 170 en lugar de 255 estamos añadiendo una información de un azul más intenso que antes no existía.
+
 La segunda función, \texttt{pintaI}, recibe una imagen por parámetro, la cual es normalizada con la función anterior, y muestra por pantalla la imagen normalizada utilizando la función para mostrar imágenes del ejercicio 1.
 
-Para comprobar el funcionamiento he creado dos matrices (una monobanda y otra tribanda) de tamaño 500 por 500 con valores aleatorios obtenidos de una distribución uniforme entre 0 y 1 utilizando el método \texttt{np.random.randn} pero los he multiplicado por 5 para comprobar que mi función es correcta. Estas son las visualizaciones del resultado:
+Para comprobar el funcionamiento he creado dos matrices (una monobanda y otra tribanda) de tamaño 500 por 500 con valores aleatorios obtenidos de una distribución uniforme entre 0 y 1 utilizando el método \texttt{np.random.randn}\cite{np_randn} pero los he multiplicado por 5 para comprobar que mi función es correcta. Estas son las visualizaciones del resultado:
 
 \begin{figure}[H]
 	\centering
@@ -260,11 +262,101 @@ Además, he aplicado la función a una imagen ya dada para comprobar que sigue v
 
 \section{Ejercicio 3}
 
+\textbf{\large Escribir una función que visualice varias imágenes a la vez(fusionando las imágenes en una última imagen final): \texttt{pintaMI(vim)} (vim será una secuencia de imágenes) ¿Qué pasa si las imágenes no son todas del mismo tipo(nivel de gris, color, blanco-negro)?.}
+
+A la pregunta de como evitar el problema de si son imágenes a color o en blanco y negro (tribanda o monobanda), y si utilizan distintos niveles de gris o de colores, la respuesta es la función que hemos realizado en el ejercicio 2. Aprovechando que nos pedían normalizar las imágenes a un rango de 0 y 1, y con el añadido de pasar toda imagen a tribanda, no tendremos problemas a la hora de apilar las matrices.
+
+El único problema encontrado es como apilar matrices de distintas dimensiones, que lo resolveremos con la primera de las funciones.
+
+De cara a este ejercicio he realizado dos funciones:
+
+\begin{enumerate}
+	\item \texttt{une\_imagenes}: Recibe una lista de imágenes. Devuelve una imagen con todas las imágenes concatenadas.
+	\item \texttt{pintaMI}: Visualiza una lista de imágenes como una única imagen.
+\end{enumerate}
+
+La primera función, dada una lista de imágenes, las apila en una única imagen final utilizando el método \texttt{np.hstack}\cite{hstack} de NumPy. De cara a utilizar esta función encontramos dos problemas:
+
+\begin{enumerate}
+	\item Imágenes no normalizadas: Lo resolveremos aplicando la función desarrollada en el ejercicio 2 a cada imagen de la lista.
+	\item Distintas dimensiones de las imágenes: Resolveremos este problema buscando la imagen con mayor altura, y añadiendo una franja negra a todas las imágenes de menor altura, de forma que todas las imágenes tengan el mismo numero de filas para poder aplicar la operación. Al unir las imágenes de forma horizontal, solamente es necesario que tengan mismo número de filas, mientras que el número de columnas es indiferente.
+\end{enumerate}
+
+Tras añadir la franja negra y unir las imágenes, este es el resultado:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 1]{union.png}
+	\caption{Imagen obtenida de la unión de dos imágenes.}
+	\label{fig:ej3}
+	
+\end{figure}
+
+\newpage
+
 \section{Ejercicio 4}
+
+\textbf{\large Escribir unafunción que modifique el coloren la imagen de cada uno de los elementos de una lista de coordenadas de píxeles. (Recordarque (fila, columna) es lo contrario a (x,y). Es decir fila=y, columna=x).}
+
+Para este ejercicio he escrito una función \texttt{modifica\_color}, que recibe como parámetros una imagen, una lista con parejas de enteros como coordenadas, que serán las coordenadas de la imagen a modificar el color, y por último una tupla de tres elementos en el rango [0,1] que conformarán el nuevo color en formato BGR.
+
+La única consideración a tener en cuenta es que en este caso, a la hora de modificar el color, si nos referimos a la fila \texttt{a} y columna \texttt{b}, en la imagen las coordenadas están invertidas, luego hay que modificar la posición \texttt{(b,a)}.
+
+Para probar esta función he rellenado una lista con las coordenadas de un cuadrado de tamaño 50x50 y he seleccionado como color un rosa pastel.
+
+Tras modificar el color de la sección de la imagen, este es el resultado:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 1]{color.png}
+	\caption{Imagen obtenida de la modificación del color de parte de la imagen.}
+	\label{fig:ej4}
+	
+\end{figure}
+
+\newpage
 
 \section{Ejercicio 5}
 
+\textbf{\large Una función que sea capaz de representar varias imágenes con sus títulos en una misma ventana.}
+
+Para este ejercicio he utilizado la función \texttt{une\_imagenes} del ejercicio 3, y he modificado la función \texttt{mostrar\_imagen} del ejercicio 1, añadiendo un parámetro por defecto vacío que sera una cadena de texto que funcionará como título de la ventana.
+
+Tras estas modificaciones, este es el resultado: 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 1]{union_titulo.png}
+	\caption{Imagen obtenida de la unión de dos imágenes y visualizada con un título.}
+	\label{fig:ej5}
+	
+\end{figure}
+
+\newpage
+
 \section{Ejecución en Colab}
+
+De cara a la ejecución en Colab simplemente tenemos que descomentar las dos lineas que activan la sincronización con Google Drive:
+
+\begin{lstlisting}
+from google.colab import drive
+drive.mount("/content/drive")
+\end{lstlisting}
+
+Y además, completar la ruta de las imágenes en nuestro disco de Drive. Por defecto la variable estará vacía para la ejecución en nuestro entorno:
+
+\begin{lstlisting}
+RUTA_DRIVE=""
+\end{lstlisting}
+
+Simplemente tenemos que completar la ruta acabando en / y sin incluir la carpeta imagenes, por ejemplo:
+
+\begin{lstlisting}
+# si las imagenes estan en la raiz de tu drive, dentro de imagenes/
+RUTA_DRIVE="./drive/My Drive/"
+\end{lstlisting}
+
+Tras esto, podemos ejecutar todo el script proporcionado en el fichero de python adjunto en la entrega.
 
 \newpage
 
@@ -278,6 +370,36 @@ Flags lectura de imágenes en OpenCV - Documentación oficial de OpenCV
 
 \url{https://docs.opencv.org/4.4.0/d4/da8/group__imgcodecs.html}
 
+\bibitem{BGR_cv}
+Lectura de imágenes en OpenCV - imread - Documentación oficial de OpenCV
+
+\url{https://docs.opencv.org/4.4.0/d4/da8/group__imgcodecs.html#ga288b8b3da0892bd651fce07b3bbd3a56}
+
+\bibitem{np_min_max}
+Mínimo y máximo de una estructura de NumPy - Documentación oficial de NumPy
+
+\url{https://numpy.org/doc/stable/reference/generated/numpy.ndarray.min.html}
+\url{https://numpy.org/doc/stable/reference/generated/numpy.ndarray.max.html}
+
+\bibitem{np_ones}
+Array de unos en NumPy - Documentación oficial de NumPy
+
+\url{https://numpy.org/doc/stable/reference/generated/numpy.ones.html}
+
+\bibitem{np_randn}
+Estructura con valores aleatorios entre 0 y 1 obtenidos a partir de una distribución uniforme - Documentación oficial de NumPy.
+
+\url{https://numpy.org/doc/stable/reference/random/generated/numpy.random.randn.html}
+
+\bibitem{hstack}
+Apilar dos matrices de forma horizontal - Documentación oficial de NumPy
+
+\url{https://numpy.org/doc/stable/reference/generated/numpy.hstack.html}
+
+\bibitem{vstack}
+Apilar dos matrices de forma vertical - Documentación oficial de NumPy
+
+\url{https://numpy.org/doc/stable/reference/generated/numpy.vstack.html}
 
 \end{thebibliography}
 
