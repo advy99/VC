@@ -68,7 +68,7 @@ def segunda_derivada_f_gaussiana(x, sigma):
 
     return (- ( (-x**2 + sigma**2) / ( math.exp((x**2) / (2*sigma**2)) * sigma**4 ) ) )
 
-def kernel_gaussiano_1d(sigma):
+def kernel_gaussiano_1d(sigma, func=funcion_gaussiana):
 
     # usaremos un intervalo de [-3 * sigma, 3 * sigma] para obtener el kernel
     comienzo_intervalo = int(- (3 * sigma))
@@ -78,7 +78,7 @@ def kernel_gaussiano_1d(sigma):
 
     # usaremos fin_intervalo+1 para que fin_intervalo este incluido
     for x in range(comienzo_intervalo, fin_intervalo + 1):
-        kernel.append( funcion_gaussiana(x, sigma) )
+        kernel.append( func(x, sigma) )
 
     # normalizamos el kernel dividiendo cada valor por la suma de todos
     # haciendo que en total sumen 1
