@@ -394,27 +394,46 @@ def piramide_laplaciana(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
     p_gaussiana = piramide_gaussiana(imagen, niveles, tipo_borde)
 
     solucion = []
-    solucion.append(p_gaussiana[-1])
 
     for i in range(niveles):
-        img_gaussiana = p_gaussiana[-(i+1)]
-        forma = (p_gaussiana[-(i+2)].shape[1], p_gaussiana[-(i+2)].shape[0])
+        img_gaussiana = p_gaussiana[i + 1]
+        forma = (p_gaussiana[i].shape[1], p_gaussiana[i].shape[0])
         img_gaussiana = cv.resize(src=img_gaussiana, dsize=forma)
-        laplaciana = p_gaussiana[-(i+2)] - img_gaussiana
+        laplaciana = p_gaussiana[i] - img_gaussiana
 
         solucion.append(laplaciana)
 
-    # le damos la vuelta
+    solucion.append(p_gaussiana[-1])
+
+    return solucion
+
+def recostruir_gaussiana(p_laplaciana):
+
+    solucion = [p_laplaciana[-1]]
+
+    for i in range(1, len(p_laplaciana)):
+        img_laplaciana = solucion[-1]
+        forma = (p_laplaciana[-(i+1)].shape[1], p_laplaciana[-(i+1)].shape[0])
+        img_laplaciana = cv.resize(src=img_laplaciana, dsize=forma)
+        gaussiana = p_laplaciana[-(i+1)] + img_laplaciana
+
+        solucion.append(gaussiana)
+
     solucion = solucion[::-1]
 
     return solucion
 
 
-piramide = piramide_laplaciana(bicycle)
+piramide = piramide_laplaciana(einstein)
 
 final = apilar_piramide(piramide)
 
 mostrar_imagen(final)
 
+reconstruccion = recostruir_gaussiana(piramide)
+
+final = apilar_piramide(reconstruccion)
+
+mostrar_imagen(final)
 
 
