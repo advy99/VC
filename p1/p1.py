@@ -39,10 +39,12 @@ def mostrar_imagen(imagen, titulo=""):
     plt.show()
 
 def mostrar_imagenes(imagenes, titulos=None, titulo=""):
-    plt.clf()
     plt.title(titulo)
     fig = plt.figure()
     ax = []
+
+    # no se porque mete una figura en blanco, la cerramos para que no se muestre
+    plt.close(1)
 
     columnas = len(imagenes)
     filas = 1
@@ -216,8 +218,6 @@ motorcycle = leeimagen("imagenes/motorcycle.bmp", 0)
 plane = leeimagen("imagenes/plane.bmp", 0)
 submarine = leeimagen("imagenes/submarine.bmp", 0)
 
-bicycle = normaliza_imagen(bicycle)
-
 mascara = kernel_gaussiano_1d(tam_mascara=9)
 
 nueva_imagen = aplicar_convolucion(bicycle, mascara, mascara)
@@ -238,6 +238,7 @@ titulos = ["Original", "Convolución con máscara gaussiana propia", "Con cv.Gau
 mostrar_imagenes([bicycle, nueva_imagen, imagen_cv], titulos)
 
 
+input("\n---------- Pulsa una tecla para continuar ----------\n")
 
 """
 Ejercicio 1
@@ -279,11 +280,141 @@ plt.scatter(range(15), kernel_15_2)
 plt.show()
 
 
+input("\n---------- Pulsa una tecla para continuar ----------\n")
+
 """
 Ejercicio 1
 
 Apartado D
 
 """
+
+
+def mascara_laplaciana(imagen, sigma=None, tam_mascara=None):
+
+
+    if sigma != None:
+        mascara_gaussiana = kernel_gaussiano_1d(sigma=sigma)
+        mascara_seg_gaussiana = kernel_gaussiano_1d(sigma=sigma, func=segunda_derivada_f_gaussiana)
+
+    elif tam_mascara != None:
+        mascara_gaussiana = kernel_gaussiano_1d(tam_mascara=tam_mascara)
+        mascara_seg_gaussiana = kernel_gaussiano_1d(func=segunda_derivada_f_gaussiana, tam_mascara=tam_mascara)
+    else:
+        print("ERROR: Tienes que introducir un sigma o un t. mascara")
+
+    continuar = sigma != None or tam_mascara != None
+
+    imagen_laplaciana= []
+
+    if continuar:
+        dxx = aplicar_convolucion (imagen, mascara_seg_gaussiana, mascara_gaussiana )
+        dyy = aplicar_convolucion(imagen, mascara_gaussiana, mascara_seg_gaussiana)
+
+        imagen_laplaciana = sigma**2 * (np.array(dxx) + np.array(dyy))
+
+    return imagen_laplaciana
+
+
+
+
+cat_s1 = mascara_laplaciana(cat, sigma=1)
+cat_s3 = mascara_laplaciana(cat, sigma=3)
+
+titulos = ["Original", "Máscara laplaciana sigma=1", "Máscara laplaciana sigma=3"]
+mostrar_imagenes([cat, cat_s1, cat_s3], titulos)
+
+
+
+"""
+Ejercicio 2
+
+Apartado A
+"""
+
+def apilar_piramide(piramide):
+
+    anchura_primera_gaussiana = piramide[1].shape[1]
+
+    imagen_final = piramide[1]
+
+    for i in range(2, len(piramide)):
+        ajustada = np.zeros((piramide[i].shape[0], anchura_primera_gaussiana))
+        ajustada[:piramide[i].shape[0], :piramide[i].shape[1]] = piramide[i]
+
+        imagen_final = np.vstack((imagen_final, ajustada))
+
+    if piramide[0].shape[0] > imagen_final.shape[0]:
+        ajustada = np.zeros((piramide[0].shape[0], imagen_final.shape[1]))
+        ajustada[:imagen_final.shape[0], :imagen_final.shape[1]] = imagen_final
+        imagen_final = ajustada
+
+    elif piramide[0].shape[0] < imagen_final.shape[0]:
+        ajustada = np.zeros((imagen_final.shape[0], piramide[0].shape[1]))
+        ajustada[:piramide[0].shape[0], :piramide[0].shape[1]] = piramide[0]
+        piramide[0] = ajustada
+
+
+
+    imagen_final = np.hstack((piramide[0], imagen_final))
+
+    return imagen_final
+
+def piramide_gaussiana(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
+    solucion = []
+    solucion.append(imagen)
+
+    for i in range(niveles):
+        imagen_con_blur = cv.GaussianBlur(solucion[-1], ksize=(3,3), sigmaX=-1, sigmaY=-1, borderType=tipo_borde)
+
+        # cogemos los indices de las filas y columnas de dos en dos
+        imagen_con_blur = imagen_con_blur[::2, ::2]
+
+        solucion.append(imagen_con_blur)
+
+    return solucion
+
+
+piramide = piramide_gaussiana(einstein)
+
+final = apilar_piramide(piramide)
+
+mostrar_imagen(final)
+
+
+"""
+Ejercicio 2
+
+Apartado B
+
+"""
+
+def piramide_laplaciana(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
+
+    p_gaussiana = piramide_gaussiana(imagen, niveles, tipo_borde)
+
+    solucion = []
+    solucion.append(p_gaussiana[-1])
+
+    for i in range(niveles):
+        img_gaussiana = p_gaussiana[-(i+1)]
+        forma = (p_gaussiana[-(i+2)].shape[1], p_gaussiana[-(i+2)].shape[0])
+        img_gaussiana = cv.resize(src=img_gaussiana, dsize=forma)
+        laplaciana = p_gaussiana[-(i+2)] - img_gaussiana
+
+        solucion.append(laplaciana)
+
+    # le damos la vuelta
+    solucion = solucion[::-1]
+
+    return solucion
+
+
+piramide = piramide_laplaciana(bicycle)
+
+final = apilar_piramide(piramide)
+
+mostrar_imagen(final)
+
 
 
