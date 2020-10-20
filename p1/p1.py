@@ -177,7 +177,7 @@ Apartado B
 """
 
 
-def aplicar_convolucion(imagen, mascara_horizontal, mascara_vertical):
+def aplicar_convolucion(imagen, mascara_horizontal, mascara_vertical, t_borde=cv.BORDER_REFLECT_101):
 
     # calculamos el tamaño que tendran los bordes
     borde = int( (len(mascara_horizontal) - 1)/2 )
@@ -205,18 +205,18 @@ def aplicar_convolucion(imagen, mascara_horizontal, mascara_vertical):
             imagen_modificada[x-borde, y-borde] = np.dot(mascara_vertical, imagen_con_bordes[x-borde:x+borde+1, y].T)
 
     # devolvemos la imagen
-    return imagen_modificada
+    return normaliza_imagen(imagen_modificada)
 
-bicycle = leeimagen("imagenes/bicycle.bmp", 0)
-bird = leeimagen("imagenes/bird.bmp", 0)
-cat = leeimagen("imagenes/cat.bmp", 0)
-dog = leeimagen("imagenes/dog.bmp", 0)
-einstein = leeimagen("imagenes/einstein.bmp", 0)
-fish = leeimagen("imagenes/fish.bmp", 0)
-marilyn = leeimagen("imagenes/marilyn.bmp", 0)
-motorcycle = leeimagen("imagenes/motorcycle.bmp", 0)
-plane = leeimagen("imagenes/plane.bmp", 0)
-submarine = leeimagen("imagenes/submarine.bmp", 0)
+bicycle    = normaliza_imagen(leeimagen("imagenes/bicycle.bmp", 0))
+bird       = normaliza_imagen(leeimagen("imagenes/bird.bmp", 0))
+cat        = normaliza_imagen(leeimagen("imagenes/cat.bmp", 0))
+dog        = normaliza_imagen(leeimagen("imagenes/dog.bmp", 0))
+einstein   = normaliza_imagen(leeimagen("imagenes/einstein.bmp", 0))
+fish       = normaliza_imagen(leeimagen("imagenes/fish.bmp", 0))
+marilyn    = normaliza_imagen(leeimagen("imagenes/marilyn.bmp", 0))
+motorcycle = normaliza_imagen(leeimagen("imagenes/motorcycle.bmp", 0))
+plane      = normaliza_imagen(leeimagen("imagenes/plane.bmp", 0))
+submarine  = normaliza_imagen(leeimagen("imagenes/submarine.bmp", 0))
 
 mascara = kernel_gaussiano_1d(tam_mascara=9)
 
@@ -339,18 +339,18 @@ def apilar_piramide(piramide):
     imagen_final = piramide[1]
 
     for i in range(2, len(piramide)):
-        ajustada = np.zeros((piramide[i].shape[0], anchura_primera_gaussiana))
+        ajustada = np.ones((piramide[i].shape[0], anchura_primera_gaussiana))
         ajustada[:piramide[i].shape[0], :piramide[i].shape[1]] = piramide[i]
 
         imagen_final = np.vstack((imagen_final, ajustada))
 
     if piramide[0].shape[0] > imagen_final.shape[0]:
-        ajustada = np.zeros((piramide[0].shape[0], imagen_final.shape[1]))
+        ajustada = np.ones((piramide[0].shape[0], imagen_final.shape[1]))
         ajustada[:imagen_final.shape[0], :imagen_final.shape[1]] = imagen_final
         imagen_final = ajustada
 
     elif piramide[0].shape[0] < imagen_final.shape[0]:
-        ajustada = np.zeros((imagen_final.shape[0], piramide[0].shape[1]))
+        ajustada = np.ones((imagen_final.shape[0], piramide[0].shape[1]))
         ajustada[:piramide[0].shape[0], :piramide[0].shape[1]] = piramide[0]
         piramide[0] = ajustada
 
@@ -364,8 +364,10 @@ def piramide_gaussiana(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
     solucion = []
     solucion.append(imagen)
 
+    kernel = kernel_gaussiano_1d(sigma=1)
+
     for i in range(niveles):
-        imagen_con_blur = cv.GaussianBlur(solucion[-1], ksize=(3,3), sigmaX=-1, sigmaY=-1, borderType=tipo_borde)
+        imagen_con_blur = aplicar_convolucion(solucion[-1], kernel, kernel, tipo_borde)
 
         # cogemos los indices de las filas y columnas de dos en dos
         imagen_con_blur = imagen_con_blur[::2, ::2]
@@ -374,13 +376,24 @@ def piramide_gaussiana(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
 
     return solucion
 
+def piramide_gaussiana_cv(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
+    solucion = [imagen]
+
+    for i in range(niveles):
+        solucion.append(cv.pyrDown(solucion[-1], borderType=tipo_borde) )
+
+    return solucion
 
 piramide = piramide_gaussiana(einstein)
 
 final = apilar_piramide(piramide)
 
-mostrar_imagen(final)
 
+piramide_cv = piramide_gaussiana_cv(einstein)
+
+final_cv = apilar_piramide(piramide_cv)
+
+mostrar_imagenes([final, final_cv], ["Implementación propia", "Utilizando pyrDown"])
 
 """
 Ejercicio 2
@@ -401,39 +414,50 @@ def piramide_laplaciana(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
         img_gaussiana = cv.resize(src=img_gaussiana, dsize=forma)
         laplaciana = p_gaussiana[i] - img_gaussiana
 
+        laplaciana = normaliza_imagen(laplaciana)
+
         solucion.append(laplaciana)
 
     solucion.append(p_gaussiana[-1])
 
     return solucion
 
-def recostruir_gaussiana(p_laplaciana):
+def piramide_laplaciana_cv(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
 
-    solucion = [p_laplaciana[-1]]
+    p_gaussiana = piramide_gaussiana_cv(imagen, niveles, tipo_borde)
 
-    for i in range(1, len(p_laplaciana)):
-        img_laplaciana = solucion[-1]
-        forma = (p_laplaciana[-(i+1)].shape[1], p_laplaciana[-(i+1)].shape[0])
-        img_laplaciana = cv.resize(src=img_laplaciana, dsize=forma)
-        gaussiana = p_laplaciana[-(i+1)] + img_laplaciana
+    solucion = [p_gaussiana[-1]]
 
-        solucion.append(gaussiana)
+    for i in range(niveles):
+        forma = (p_gaussiana[-(i+2)].shape[1], p_gaussiana[-(i+2)].shape[0])
+        reescalada = cv.pyrUp(p_gaussiana[-(i+1)], dstsize=forma)
+        laplaciana = p_gaussiana[-(i+2)] - reescalada
+
+        solucion.append(laplaciana)
 
     solucion = solucion[::-1]
 
     return solucion
 
 
-piramide = piramide_laplaciana(einstein)
+
+
+piramide = piramide_laplaciana(bicycle)
 
 final = apilar_piramide(piramide)
 
-mostrar_imagen(final)
+piramide_cv = piramide_laplaciana_cv(bicycle)
 
-reconstruccion = recostruir_gaussiana(piramide)
+final_cv = apilar_piramide(piramide_cv)
 
-final = apilar_piramide(reconstruccion)
+mostrar_imagenes([final, final_cv], ["Implementación propia", "Utilizando pyrUp"])
 
-mostrar_imagen(final)
+
+
+
+"""
+Ejercicio 3
+
+"""
 
 
