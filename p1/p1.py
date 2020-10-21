@@ -207,22 +207,36 @@ def aplicar_convolucion(imagen, mascara_horizontal, mascara_vertical, t_borde=cv
 
     imagen_modificada = np.zeros(imagen.shape)
 
-    # recorremos la imagen
-    for x in range(borde, anchura - borde):
-        for y in range(borde, altura - borde):
-            # multiplicamos la mascara que queremos que se aplique de forma horizontal
-            # con los elementos de distintas columnas, pero mismas filas
-            imagen_modificada[x-borde, y-borde] = np.dot(mascara_horizontal, imagen_con_bordes[x, y-borde:y+borde + 1])
+    num_dimensiones = 1
+
+    # para tribanda, no lo asignamos directamente porque en monobanda da 2
+    if imagen.ndim == 3:
+       num_dimensiones = 3
+
+    for i in range(num_dimensiones):
+        # recorremos la imagen
+        for x in range(borde, anchura - borde):
+            for y in range(borde, altura - borde):
+                # multiplicamos la mascara que queremos que se aplique de forma horizontal
+                # con los elementos de distintas columnas, pero mismas filas
+                if num_dimensiones == 3:
+                    imagen_modificada[x-borde, y-borde, i] = np.dot(mascara_horizontal, imagen_con_bordes[x, y-borde:y+borde + 1, i])
+                else:
+                    imagen_modificada[x-borde, y-borde] = np.dot(mascara_horizontal, imagen_con_bordes[x, y-borde:y+borde + 1])
 
     # como la imagen aplicada una convolucion la hemos ajustado, necesitamos volver
     # a añadir los bordes
     imagen_con_bordes = cv.copyMakeBorder(imagen_modificada, borde, borde, borde, borde, cv.BORDER_REFLECT_101)
 
-    for x in range(borde, anchura - borde):
-        for y in range(borde, altura - borde):
-            # multiplicamos la mascara que queremos que se aplique de forma vertical
-            # con los elementos de distintas filas, pero misma columna
-            imagen_modificada[x-borde, y-borde] = np.dot(mascara_vertical, imagen_con_bordes[x-borde:x+borde+1, y].T)
+    for i in range(num_dimensiones):
+        for x in range(borde, anchura - borde):
+            for y in range(borde, altura - borde):
+                # multiplicamos la mascara que queremos que se aplique de forma vertical
+                # con los elementos de distintas filas, pero misma columna
+                if num_dimensiones == 3:
+                    imagen_modificada[x-borde, y-borde, i] = np.dot(mascara_vertical, imagen_con_bordes[x-borde:x+borde+1, y, i].T)
+                else:
+                    imagen_modificada[x-borde, y-borde] = np.dot(mascara_vertical, imagen_con_bordes[x-borde:x+borde+1, y].T)
 
     # devolvemos la imagen
     return normaliza_imagen(imagen_modificada)
@@ -366,7 +380,13 @@ def apilar_piramide(piramide):
 
     # apilamos desde el nivel 1 hasta el N
     for i in range(2, len(piramide)):
-        ajustada = np.ones((piramide[i].shape[0], anchura_primera_gaussiana))
+        forma = (piramide[i].shape[0], anchura_primera_gaussiana)
+
+        if piramide[0].ndim == 3:
+            forma = (piramide[i].shape[0], anchura_primera_gaussiana, 3)
+
+        ajustada = np.ones(forma)
+
         ajustada[:piramide[i].shape[0], :piramide[i].shape[1]] = piramide[i]
 
         imagen_final = np.vstack((imagen_final, ajustada))
@@ -375,12 +395,22 @@ def apilar_piramide(piramide):
     # teniendo en cuenta si es mas grande la imagen original o la union de los
     # niveles a la hora de unirlas
     if piramide[0].shape[0] > imagen_final.shape[0]:
-        ajustada = np.ones((piramide[0].shape[0], imagen_final.shape[1]))
+        forma = (piramide[0].shape[0], imagen_final.shape[1])
+
+        if piramide[0].ndim == 3:
+            forma = (piramide[0].shape[0], imagen_final.shape[1], 3)
+
+        ajustada = np.ones(forma)
         ajustada[:imagen_final.shape[0], :imagen_final.shape[1]] = imagen_final
         imagen_final = ajustada
 
     elif piramide[0].shape[0] < imagen_final.shape[0]:
-        ajustada = np.ones((imagen_final.shape[0], piramide[0].shape[1]))
+        forma = (imagen_final.shape[0], piramide[0].shape[1])
+
+        if piramide[0].ndim == 3:
+            forma = (imagen_final.shape[0], piramide[0].shape[1], 3)
+
+        ajustada = np.ones(forma)
         ajustada[:piramide[0].shape[0], :piramide[0].shape[1]] = piramide[0]
         piramide[0] = ajustada
 
@@ -600,6 +630,37 @@ mostrar_imagen(img_p_fish_submarine)
 
 input("\n---------- Pulsa una tecla para continuar ----------\n")
 
+"""
+BONUS
+"""
 
 
+bicycle    = normaliza_imagen(leeimagen("imagenes/bicycle.bmp", 1))
+bird       = normaliza_imagen(leeimagen("imagenes/bird.bmp", 1))
+cat        = normaliza_imagen(leeimagen("imagenes/cat.bmp", 1))
+dog        = normaliza_imagen(leeimagen("imagenes/dog.bmp", 1))
+einstein   = normaliza_imagen(leeimagen("imagenes/einstein.bmp", 1))
+fish       = normaliza_imagen(leeimagen("imagenes/fish.bmp", 1))
+marilyn    = normaliza_imagen(leeimagen("imagenes/marilyn.bmp", 1))
+motorcycle = normaliza_imagen(leeimagen("imagenes/motorcycle.bmp", 1))
+plane      = normaliza_imagen(leeimagen("imagenes/plane.bmp", 1))
+submarine  = normaliza_imagen(leeimagen("imagenes/submarine.bmp", 1))
+titulos = ["Original", "Bajas frecuencias", "Altas frecuencias"]
+
+
+hibrida = crear_imagen_hibrida(dog, cat, 9, 4)
+mostrar_imagenes(hibrida, titulos)
+hibrida_dog_cat = hibrida[0]
+piramide_dog_cat = piramide_gaussiana(hibrida_dog_cat)
+img_p_dog_cat = apilar_piramide(piramide_dog_cat)
+mostrar_imagen(img_p_dog_cat)
+
+
+
+hibrida = crear_imagen_hibrida(einstein, marilyn, 5, 1)
+mostrar_imagenes(hibrida, titulos)
+hibrida_einstein_marilyn = hibrida[0]
+piramide_einstein_marilyn = piramide_gaussiana(hibrida_einstein_marilyn)
+img_p_einstein_marilyn = apilar_piramide(piramide_einstein_marilyn)
+mostrar_imagen(img_p_einstein_marilyn)
 
