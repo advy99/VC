@@ -558,12 +558,47 @@ def crear_imagen_hibrida(imagen_f_bajas, imagen_f_altas, sigma_img_f_bajas, sigm
 
 
 #imagen_hibrida, img_f_bajas, img_f_altas = crear_imagen_hibrida(bird, plane, 3, 2)
-imagen_hibrida, img_f_bajas, img_f_altas = crear_imagen_hibrida(einstein, marilyn, 3, 1.5)
+#imagen_hibrida, img_f_bajas, img_f_altas = crear_imagen_hibrida(einstein, marilyn, 3, 1.5)
+
+titulos = ["Original", "Bajas frecuencias", "Altas frecuencias"]
+
+hibrida = crear_imagen_hibrida(einstein, marilyn, 5, 1)
+mostrar_imagenes(hibrida, titulos)
+hibrida_einstein_marilyn = hibrida[0]
+piramide_einstein_marilyn = piramide_gaussiana(hibrida_einstein_marilyn)
+img_p_einstein_marilyn = apilar_piramide(piramide_einstein_marilyn)
+mostrar_imagen(img_p_einstein_marilyn)
 
 
-mostrar_imagenes([imagen_hibrida, img_f_bajas, img_f_altas])
+hibrida = crear_imagen_hibrida(motorcycle, bicycle, 8, 2)
+mostrar_imagenes(hibrida, titulos)
+hibrida_motorcycle_bicycle = hibrida[0]
+piramide_motorcycle_bicycle = piramide_gaussiana(hibrida_motorcycle_bicycle)
+img_p_motorcycle_bicycle = apilar_piramide(piramide_motorcycle_bicycle)
+mostrar_imagen(img_p_motorcycle_bicycle)
 
+hibrida = crear_imagen_hibrida(dog, cat, 9, 4)
+mostrar_imagenes(hibrida, titulos)
+hibrida_dog_cat = hibrida[0]
+piramide_dog_cat = piramide_gaussiana(hibrida_dog_cat)
+img_p_dog_cat = apilar_piramide(piramide_dog_cat)
+mostrar_imagen(img_p_dog_cat)
 
+hibrida = crear_imagen_hibrida(bird, plane, 10, 3)
+mostrar_imagenes(hibrida, titulos)
+hibrida_bird_plane = hibrida[0]
+piramide_bird_plane = piramide_gaussiana(hibrida_bird_plane)
+img_p_bird_plane = apilar_piramide(piramide_bird_plane)
+mostrar_imagen(img_p_bird_plane)
+
+hibrida = crear_imagen_hibrida(fish, submarine, 6, 2)
+mostrar_imagenes(hibrida, titulos)
+hibrida_fish_submarine = hibrida[0]
+piramide_fish_submarine = piramide_gaussiana(hibrida_fish_submarine)
+img_p_fish_submarine = apilar_piramide(piramide_fish_submarine)
+mostrar_imagen(img_p_fish_submarine)
+
+input("\n---------- Pulsa una tecla para continuar ----------\n")
 
 
 
