@@ -566,22 +566,33 @@ Ejercicio 3
 
 
 def crear_imagen_hibrida(imagen_f_bajas, imagen_f_altas, sigma_img_f_bajas, sigma_img_f_altas, t_borde=cv.BORDER_REPLICATE):
+    """
+    Función para crear una imagen hibrida dadas dos imagenes y sus respectivos sigmas para aplicar las máscaras.
+    """
 
+    # calculamos cada máscara
     kernel_f_bajas = kernel_gaussiano_1d(sigma=sigma_img_f_bajas)
     kernel_f_altas = kernel_gaussiano_1d(sigma=sigma_img_f_altas)
 
+    # la imagen de frecuencias bajas es la imagen aplicando el filtro gaussiano
     imagen_f_bajas = aplicar_convolucion(imagen_f_bajas, kernel_f_bajas, kernel_f_bajas, t_borde)
+
+    # la imagen de frecuencias altas es, la respectiva imagen a la que restamos
+    # las frecuencias bajas, por lo que primero obtenemos la imagen de frecuencias bajas
     imagen_f_altas_sin_f_bajas = aplicar_convolucion(imagen_f_altas, kernel_f_altas, kernel_f_altas, t_borde)
 
+    # y restamos a todas las frecuencias las bajas, quedandonos con las altas
     imagen_f_altas = imagen_f_altas - imagen_f_altas_sin_f_bajas
 
-
+    # sumamos las imagenes
     imagen_hibrida = imagen_f_bajas + imagen_f_altas
 
+    # y las normalizamos en [0-1]
     imagen_hibrida = normaliza_imagen(imagen_hibrida)
     imagen_f_bajas = normaliza_imagen(imagen_f_bajas)
     imagen_f_altas = normaliza_imagen(imagen_f_altas)
 
+    # devolvemos una tupla con todas las imagenes
     return imagen_hibrida, imagen_f_bajas, imagen_f_altas
 
 
