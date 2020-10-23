@@ -657,7 +657,7 @@ mostrar_imagenes(hibrida, titulos)
 hibrida_morgan_will = hibrida[0]
 piramide_morgan_will = piramide_gaussiana(hibrida_morgan_will)
 img_p_morgan_will = apilar_piramide(piramide_morgan_will)
-mostrar_imagen(img_p_einstein_marilyn)
+mostrar_imagen(img_p_morgan_will)
 
 
 hibrida = crear_imagen_hibrida(einstein, marilyn, 8, 2)
