@@ -163,6 +163,7 @@ def kernel_gaussiano_1d(sigma=None, func=funcion_gaussiana, tam_mascara=None):
     return kernel_normalizado
 
 # probamos la función
+print("Ejercicio 1 A")
 
 mascara_gaussiana_sigma_1 = kernel_gaussiano_1d(1)
 mascara_primera_deriv_t_5 = kernel_gaussiano_1d(None, derivada_f_gaussiana, 5)
@@ -253,6 +254,8 @@ motorcycle = normaliza_imagen(leeimagen("imagenes/motorcycle.bmp", 0))
 plane      = normaliza_imagen(leeimagen("imagenes/plane.bmp", 0))
 submarine  = normaliza_imagen(leeimagen("imagenes/submarine.bmp", 0))
 
+
+print("Ejercicio 1B")
 # probamos a aplicar una convolucion y la mostramos
 mascara = kernel_gaussiano_1d(tam_mascara=9)
 
@@ -273,6 +276,7 @@ Ejercicio 1
 Apartado C
 
 """
+print("Ejercicio 1C")
 
 for i in range(5, 25, 4):
 
@@ -281,11 +285,11 @@ for i in range(5, 25, 4):
     mascara_primera_derivada = kernel_gaussiano_1d(func=derivada_f_gaussiana, tam_mascara=i)
     mascara_segunda_derivada = kernel_gaussiano_1d(func=segunda_derivada_f_gaussiana, tam_mascara=i)
 
-    kernel, basura = cv.getDerivKernels(1, 1, i)
+    kernel, _ = cv.getDerivKernels(1, 1, i)
 
     kernel = kernel.reshape((i,))
 
-    kernel_2, basura = cv.getDerivKernels(2, 2, i)
+    kernel_2, _ = cv.getDerivKernels(2, 2, i)
 
     kernel_2 = kernel_2.reshape((i,))
 
@@ -310,6 +314,29 @@ for i in range(5, 25, 4):
     plt.title("Máscara segunda derivada f. gaussiana deriv kernels, t.mascara = {}.".format(i))
     plt.scatter(rango, kernel_2)
     plt.show()
+
+mascara_primera_derivada = kernel_gaussiano_1d(func=derivada_f_gaussiana, tam_mascara=7)
+mascara_segunda_derivada = kernel_gaussiano_1d(func=segunda_derivada_f_gaussiana, tam_mascara=7)
+
+kernel, _ = cv.getDerivKernels(1, 1, 7)
+
+kernel = kernel.reshape((7,))
+
+kernel_2, _ = cv.getDerivKernels(2, 2, 7)
+
+kernel_2 = kernel_2.reshape((7,))
+
+ej_deriv = aplicar_convolucion(cat, mascara_primera_derivada, mascara_primera_derivada)
+ej_deriv_cv = aplicar_convolucion(cat, kernel, kernel)
+
+titulos = ["Original", "Primera derivada", "Primera derivada getDerivKernels"]
+mostrar_imagenes([cat, ej_deriv, ej_deriv_cv], titulos)
+
+ej_deriv = aplicar_convolucion(cat, mascara_segunda_derivada, mascara_segunda_derivada)
+ej_deriv_cv = aplicar_convolucion(cat, kernel_2, kernel_2)
+
+titulos = ["Original", "Primera derivada", "Primera derivada getDerivKernels"]
+mostrar_imagenes([cat, ej_deriv, ej_deriv_cv], titulos)
 
 
 input("\n---------- Pulsa una tecla para continuar ----------\n")
@@ -356,6 +383,7 @@ def mascara_laplaciana(imagen, sigma=None, tam_mascara=None):
     return normaliza_imagen(imagen_laplaciana)
 
 
+print("Ejercicio 1 D")
 
 # probamos las mascaras
 cat_s1 = mascara_laplaciana(cat, sigma=1)
