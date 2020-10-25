@@ -207,7 +207,6 @@ Para el cálculo de las distintas funciones simplemente he evaluado la función 
 	\label{f_gaussiana}
 \end{figure}
 
-\newpage
 
 De cara a las funciones derivadas, simplemente he derivado la función gaussiana respecto de $x$:
 
@@ -268,13 +267,13 @@ Podemos comprobar que obtenemos los resultados esperados, ya que el cálculo uti
 
 Para desarrollar este ejercicio he creado la función \texttt{aplicar\_convolucion}, que recibe como parámetros la imagen, la máscara a aplicar de forma horizontal, la máscara a aplicar de forma vertical y el tipo de borde a añadir.
 
-Este ultimo parámetro lo utilizaremos de cara a añadir bordes extra a la imagen, ya que si no aplicamos esta operación parte de los pixeles originales de las imágenes no se les aplicarían las máscaras, ya que el propio tamaño de máscara no permite centrarlas en dichos píxeles sin salir de la imágen.
+Este ultimo parámetro lo utilizaremos de cara a añadir bordes extra a la imagen\cite{bordertypes}, ya que si no aplicamos esta operación parte de los pixeles originales de las imágenes no se les aplicarían las máscaras, ya que el propio tamaño de máscara no permite centrarlas en dichos píxeles sin salir de la imágen.
 
 
 Esta función sigue los siguientes pasos:
 
 \begin{enumerate}
-	\item Aplicar borde: Aplica un borde de tamaño $(len(mascara) - 1) / 2$ a la imagen utilizando la función de OpenCV \texttt{copyMakeBorder}.
+	\item Aplicar borde: Aplica un borde de tamaño $(len(mascara) - 1) / 2$ a la imagen utilizando la función de OpenCV \texttt{copyMakeBorder}\cite{copyborder}.
 	\item Crea una matriz rellena de ceros del tamaño de la imagen original (sin bordes), donde almacenaremos la imagen final.
 	\item Recorre la imágen con borde (matriz) desde el tamaño del borde hasta el extremo de la imagen menos los bordes, de forma que pasamos por todos los píxeles de la imagen original. En este recorrido aplica la máscara horizontal, multiplicando la máscara por los pixeles de una misma fila, pero tantos como tamaño de máscara, centrando la máscara en el pixel actual que estamos recorriendo. De esta forma se aplica la máscara en el pixel que queremos y utilizando los bordes añadidos para los valores de la máscara que en principio quedarían fuera de la imagen original. Almacena el resultado en la matriz creada en el paso 2.
 	\item Tras aplicar la máscara horizontal, volvemos a añadir los bordes a la imagen con la máscara aplicada, de cara a aplicar la máscara vertical.
@@ -305,7 +304,7 @@ Observamos como el resultado es similar, por lo que intuimos que la implementaci
 
 \subsection{Comparación de máscaras 1D, implementación propia y OpenCV}
 
-De cara a comparar mi implementación con las máscaras obtenidas con getDerivKernels de OpenCV, como nos pide el ejercicio, he generado las máscaras 1D con distintos tamaños de máscara y sigma y las he dibujado utilizando MatPlotLib:
+De cara a comparar mi implementación con las máscaras obtenidas con getDerivKernels\cite{getDerivKernelsCV} de OpenCV, como nos pide el ejercicio, he generado las máscaras 1D con distintos tamaños de máscara y sigma y las he dibujado utilizando MatPlotLib:
 
 
 \begin{figure}[H]
@@ -545,7 +544,7 @@ Por último en esta función finalmente normalizaremos la imagen en el rango [0-
 
 \section{Ejercicio 2: Pirámides}
 
-En este ejercicio se nos pide crear dos tipos de pirámides, la Gaussiana y la Laplaciana, de al menos cuatro niveles (cuatro subsamples, la imagen original cuenta como nivel 0). Para esto se pueden utilizar los métodos de OpenCV pyrUp y pyrDown, sin embargo yo he realizado una implementación propia y las he comparado con la implementación de OpenCV.
+En este ejercicio se nos pide crear dos tipos de pirámides, la Gaussiana y la Laplaciana, de al menos cuatro niveles (cuatro subsamples, la imagen original cuenta como nivel 0). Para esto se pueden utilizar los métodos de OpenCV pyrUp\cite{pyrUpCV} y pyrDown\cite{pyrDownCV}, sin embargo yo he realizado una implementación propia y las he comparado con la implementación de OpenCV.
 
 \subsection{Pirámide Gaussiana}
 
@@ -874,6 +873,11 @@ He escogido estas imágenes ya que se tratan de imágenes con fondos similares, 
 
 \begin{thebibliography}{9}
 
+\bibitem{bordertypes}
+	Border types - Documentación oficial de OpenCV.
+
+	\url{https://docs.opencv.org/4.4.0/d2/de8/group__core__array.html#ga209f2f4869e304c82d07739337eae7c5}
+
 \bibitem{separabilidad_2D}
 	Prueba de separabilidad para las convoluciones 2D.
 
@@ -885,6 +889,20 @@ He escogido estas imágenes ya que se tratan de imágenes con fondos similares, 
 	\url{https://docs.opencv.org/4.4.0/d4/d86/group__imgproc__filter.html#ga6d6c23f7bd3f5836c31cfae994fc4aea}
 
 
+\bibitem{copyborder}
+	copyMakeBorder - Documentación oficial de OpenCV.
+
+	\url{https://docs.opencv.org/4.4.0/d2/de8/group__core__array.html#ga2ac1049c2c3dd25c2b41bffe17658a36}
+
+\bibitem{pyrUpCV}
+	pyrUp - Documentación oficial de OpenCV.
+
+	\url{https://docs.opencv.org/4.4.0/d4/d86/group__imgproc__filter.html#gada75b59bdaaca411ed6fee10085eb784}
+
+\bibitem{pyrDownCV}
+	pyrDown - Documentación oficial de OpenCV.
+
+	\url{https://docs.opencv.org/4.4.0/d4/d86/group__imgproc__filter.html#gaf9bba239dfca11654cb7f50f889fc2ff}
 
 \bibitem{img_hibridas}
 

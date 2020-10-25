@@ -336,7 +336,7 @@ mostrar_imagenes([cat, ej_deriv, ej_deriv_cv], titulos)
 ej_deriv = aplicar_convolucion(cat, mascara_segunda_derivada, mascara_segunda_derivada)
 ej_deriv_cv = aplicar_convolucion(cat, kernel_2, kernel_2)
 
-titulos = ["Original", "Primera derivada", "Primera derivada getDerivKernels"]
+titulos = ["Original", "Segunda derivada", "Segunda derivada getDerivKernels"]
 mostrar_imagenes([cat, ej_deriv, ej_deriv_cv], titulos)
 
 
