@@ -518,13 +518,13 @@ Apartado B
 
 """
 
-def piramide_laplaciana(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
+def piramide_laplaciana(imagen, niveles=4, sigma=1, tipo_borde=cv.BORDER_REPLICATE):
     """
     Funcion para obtener la piramide laplaciana
     """
 
     # calculamos la piramide gaussiana
-    p_gaussiana = piramide_gaussiana(imagen, niveles, tipo_borde)
+    p_gaussiana = piramide_gaussiana(imagen, niveles, sigma, tipo_borde)
 
     solucion = []
 
@@ -637,7 +637,7 @@ def crear_imagen_hibrida(imagen_f_bajas, imagen_f_altas, sigma_img_f_bajas, sigm
 print("Ejercicio 3")
 
 
-titulos = ["Original", "Bajas frecuencias", "Altas frecuencias"]
+titulos = ["Imágen híbrida", "Bajas frecuencias", "Altas frecuencias"]
 
 hibrida = crear_imagen_hibrida(einstein, marilyn, 6, 2)
 mostrar_imagenes(hibrida, titulos)
@@ -697,15 +697,10 @@ submarine  = normaliza_imagen(leeimagen("imagenes/submarine.bmp", 1))
 morgan      = normaliza_imagen(leeimagen("imagenes/morgan_freeman.png", 1))
 will        = normaliza_imagen(leeimagen("imagenes/will_smith.png", 1))
 
-titulos = ["Original", "Bajas frecuencias", "Altas frecuencias"]
+titulos = ["Imágen híbrida", "Bajas frecuencias", "Altas frecuencias"]
 
-hibrida = crear_imagen_hibrida(morgan, will, 15, 10)
-mostrar_imagenes(hibrida, titulos)
-hibrida_morgan_will = hibrida[0]
-piramide_morgan_will = piramide_gaussiana(hibrida_morgan_will)
-img_p_morgan_will = apilar_piramide(piramide_morgan_will)
-mostrar_imagen(img_p_morgan_will)
 
+print("Bonus")
 
 hibrida = crear_imagen_hibrida(einstein, marilyn, 8, 2)
 mostrar_imagenes(hibrida, titulos)
@@ -743,4 +738,22 @@ piramide_fish_submarine = piramide_gaussiana(hibrida_fish_submarine)
 img_p_fish_submarine = apilar_piramide(piramide_fish_submarine)
 mostrar_imagen(img_p_fish_submarine)
 
+
 input("\n---------- Pulsa una tecla para continuar ----------\n")
+
+print("Bonus: Imagen propia")
+
+hibrida = crear_imagen_hibrida(morgan, will, 15, 10)
+mostrar_imagenes(hibrida, titulos)
+hibrida_morgan_will = hibrida[0]
+piramide_morgan_will = piramide_gaussiana(hibrida_morgan_will)
+img_p_morgan_will = apilar_piramide(piramide_morgan_will)
+mostrar_imagen(img_p_morgan_will)
+
+
+
+
+input("\n---------- Pulsa una tecla para continuar ----------\n")
+
+
+

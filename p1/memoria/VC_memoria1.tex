@@ -177,6 +177,10 @@ Para esta primera práctica trabajaremos los filtros de máscaras, con el objeti
 
 En esta práctica también nos centraremos en comparar nuestra implementación propia con la implementación de la biblioteca OpenCV. Por este motivo, en todos los ejercicios utilizaré funciones implementadas en el fichero de Python entregado y en ciertos momentos utilizaré las funciones de filtros que nos ofrece OpenCV pero solo de forma comparativa.
 
+En todo caso, en esta memoria me centraré en explicar que decisiones he tomado para el desarrollo de la práctica, así como parámetros escogidos, pero solo comentaré como funciona el código sin entrar en detalle, ya que junto a esta memoria se ha entregado un fichero con el código escrito en Python.
+
+De cara al desarrollo de la práctica también se han utilizado funciones de la práctica 0, que al ya estar explicadas en su respectiva entrega no volveré a explicar.
+
 \section{Ejercicio 1: Máscaras}
 
 Este ejercicio trata sobre el cálculo de las máscaras Gaussianas que utilizaremos durante toda la práctica, la aplicación de dichas máscaras a una imagen en forma de una convolución 2D y el cálculo de máscaras normalizadas de la Laplaciana de la Gaussiana con nuestras propias máscaras.
@@ -545,6 +549,8 @@ En este ejercicio se nos pide crear dos tipos de pirámides, la Gaussiana y la L
 
 \subsection{Pirámide Gaussiana}
 
+La construcción de la pirámide gaussiana se basa reescalar una imagen a la mitad en cada nivel, sin embargo, el hacer directamente ese reescalado hace que se añada ruido a la imagen resultante, y por lo tanto modificando la información de la imagen reescalada. Para evitar esto, antes de reescalar la imagen se aplica un alisamiento utilizando una máscara gaussiana antes de reescalar la imagen.
+
 De cara a obtener la pirámide gaussiana he implementado la función \texttt{piramide\_gaussiana}, que recibe como parámetros una imagen, el número de niveles que tendrá la pirámide, por defecto 4, el sigma a utilizar para el alisamiento antes de reescalar al siguiente nivel, por defecto 1, y el tipo de borde a utilizar al aplicar el alisamiento, por defecto \texttt{cv.BORDER\_REPLICATE}, es decir, réplica de bordes.
 
 Esta función devolverá una lista con las imágenes que conforman la pirámide.
@@ -565,9 +571,17 @@ El resultado obtenido es el siguiente:
 
 \end{figure}
 
+Observamos como el resultado es equivalente al utilizado con pyrDown, por lo que podemos suponer que es correcto.
 
 \subsection{Pirámide Laplaciana}
 
+La construcción de la pirámide laplaciana se basa en, teniendo la pirámide gaussiana de la imagen, calcular un nivel $x$ de la pirámide laplaciana restando el nivel $x$ de la pirámide gaussiana con el nivel $x+1$ de la pirámide gaussiana reescalado, de forma que tenga las mismas dimensiones que el nivel $x$ para poder restar dichas imagenes. Por este motivo, el nivel más alto (imagen más pequeña de la pirámide), siempre será el nivel más alto de la pirámide gaussiana.
+
+Para obtener esta pirámide he desarrollado la función \texttt{piramide\_laplaciana}, que recibe por parámetro una imagen, el número de niveles, por defecto cuatro, el valor de sigma, por defecto uno, y la forma de añadir el borde, por defecto réplica.
+
+Esta función describe el procedimiento explicado en el primer párrafo, utilizando el método \texttt{resize} de OpenCV para reescalar los niveles de la pirámide gaussiana, y devuelve una lista con la pirámide.
+
+De nuevo, para poder visualizar la pirámide con las proporciones reales he utilizado la función \texttt{apilar\_piramide} comentada en el apartado anterior. El resultado es el siguiente:
 
 \begin{figure}[H]
   \centering
@@ -577,11 +591,281 @@ El resultado obtenido es el siguiente:
 
 \end{figure}
 
+En este caso vemos como el resultado también es equivalente a utilizar pyrUp, sin embargo en este ejemplo vemos como nuestra propia implementación da unos mejores resultados al marcar mejor los bordes, debido a que nosotros utilizamos las funciones exactas y no una aproximación, como hace OpenCV, y precisamente en esta operación donde se muestran las diferencias entre como se aplica el alisado y el reescalado vemos que se hace más clara la diferencia entre utilizar el método exacto y una aproximación.
+
 \section{Ejercicio 3: Imágenes híbridas}
 
+Este ejercicio se basa en el trabajo sobre imágenes híbridas\cite{img_hibridas}, en el cual se explica que en una imagen, si la observamos desde cerca el ojo humano se centra en las frecuencas altas de la imagen, mientras que si la observamos desde cierta distancia se centra en las frecuencias bajas, por lo tanto podemos aprovechar esto para crear imágenes en las que desde cerca se observen ciertos objetos y desde lejos otros distintos.
 
 
-\section{Bonus}
+Para realizar este ejercicio he usado las máscaras gaussianas, que son máscaras de paso bajo, es decir, mantienen las frecuencias bajas de la imagen, y eliminan las frecuencias altas. De esta forma, dadas dos imágenes A y B, de la imagen A obtenemos la imagen con frecuencias bajas Abajas aplicando una máscara gaussiana, y obtenemos la imagen B con frecuencias altas Baltas obteniendo una imagen temporal Btmp con frecuencias bajas al aplicarle una máscara gaussiana, y esa imagen restandola a la imagen original B, de forma que eliminamos las frecuencias bajas y mantenemos las altas. Tras obtener las imagenes con altas y bajas frecuencias, simplemente las sumamos.
+
+
+Por lo tanto, he desarrollado una función \texttt{crear\_imagen\_hibrida} que recibe como parámetros:
+
+\begin{enumerate}
+	\item Imágen en la que queremos mantener las frecuencias bajas.
+	\item Imágen en la que queremos mantener las frecuencias altas.
+	\item Sigma a aplicar a la imagen para obtener frecuencias bajas.
+	\item Sigma a aplicar a la imagen para obtener frecuencias altas.
+	\item Tipo de bordes para aplicar las convoluciones, por defecto réplica.
+\end{enumerate}
+
+Esta función simplemente se comporta como he descrito anteriormente, y devuelve tres imágenes, la imagen hibrida, la imagen de bajas frecuencias, y la imagen de altas frecuencias en una lista. Antes de devolver las imágenes las normaliza en el rango [0-1] de cara a su correcta visualización.
+
+De cara a obtener las imágenes híbridas de las imágenes dadas se han escogido los parámtros y que imagen de cada pareja mantendría unas u otras frecuencias de forma empírica.
+
+Estos son los resultados y la comparación de las imágenes híbridas con las imágenes con frecuencias bajas y altas:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas/E-M.png}
+ 		 \caption{Imágen hibrida de Eintein con Marylin.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas/B-M.png}
+ 		 \caption{Imágen hibrida de una bicicleta con una motocicleta.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas/G-P.png}
+ 		 \caption{Imágen hibrida de un gato y un perro.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas/A-P.png}
+ 		 \caption{Imágen hibrida de un avión y un pájaro.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas/P-S.png}
+ 		 \caption{Imágen hibrida de un pez y un submarino.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+De cara a que la distinción sea más clara, como nos pide el ejercicio, mostraré la pirámide gaussiana obtenida de las imágenes hibridas utilizando la función desarrollada en el ejercicio 2:
+
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas/PE-M.png}
+ 		 \caption{Pirámide de la imágen hibrida de Eintein con Marylin.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas/PB-M.png}
+ 		 \caption{Pirámide de la imágen hibrida de una bicicleta con una motocicleta.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas/PG-P.png}
+ 		 \caption{Pirámide de la imágen hibrida de un gato y un perro.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas/PA-P.png}
+ 		 \caption{Pirámide de la imágen hibrida de un avión y un pájaro.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas/PP-S.png}
+ 		 \caption{Pirámide de la imágen hibrida de un pez y un submarino.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+Vemos como gracias a la pirámide gaussiana las diferencias entre observarla de cerca y de lejos es más clara.
+
+Aun así vemos que en las imágenes híbridas se sigue observando cierta sombra de la imagen que no deberíamos ver de cerca, pero como comentan en el paper en el que nos hemos basado, esas sombras son las que nos permiten en la distancia reconocer la imagen de bajas frecuencias.
+
+Es importante mencionar que estas imágenes híbridas se han podido construir ya que la posición de los objetos o personas que conforman la imagen híbrida es la misma.
+
+
+\newpage
+
+\section{Ejercicio bonus: Imágenes híbridas a color}
+
+En este ejercicio bonus se nos pide hacer lo mismo que en el ejercicio 3 sin embargo con imágenes a color, y añadiendo una pareja de imágenes propia.
+
+De cara a realizar las imágenes híbridas a color simplemente he modificado la función \texttt{aplicar\_convolución} para que tenga en cuenta si la imagen es monobanda o tribanda, de forma que aplique la convolución a todas las bandas. También he modificado la función \texttt{apilar\_piramide} para que tenga en cuenta las formas correctas para apilar las imágenes, pero esa función es simplemente para visualizar el resultado y no en un objetivo del ejercicio como tal, así que no entraré en detalle en esta memoria.
+
+\subsection{Imágenes dadas}
+
+Tras esta modificación obtenemos las siguientes imágenes híbridas:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/E-M.png}
+ 		 \caption{Imágen hibrida de Eintein con Marylin.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/B-M.png}
+ 		 \caption{Imágen hibrida de una bicicleta con una motocicleta.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/G-P.png}
+ 		 \caption{Imágen hibrida de un gato y un perro.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/A-P.png}
+ 		 \caption{Imágen hibrida de un avión y un pájaro.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/P-S.png}
+ 		 \caption{Imágen hibrida de un pez y un submarino.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+De cara a que la distinción sea más clara, como nos pide el ejercicio, mostraré la pirámide gaussiana obtenida de las imágenes hibridas utilizando la función desarrollada en el ejercicio 2:
+
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/PE-M.png}
+ 		 \caption{Pirámide gaussiana de la imágen hibrida de Eintein con Marylin.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/PB-M.png}
+ 		 \caption{Pirámide gaussiana de la imágen hibrida de una bicicleta con una motocicleta.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/PG-P.png}
+ 		 \caption{Pirámide gaussiana de la imágen hibrida de un gato y un perro.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/PA-P.png}
+ 		 \caption{Pirámide gaussiana de la imágen hibrida de un avión y un pájaro.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/PP-S.png}
+ 		 \caption{Pirámide gaussiana de la imágen hibrida de un pez y un submarino.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+Vemos como el resultado de estas imágenes no es tan bueno, ya que las sombras que nos permitian ver las imágenes de bajas frecuencias, al estar a color, contaminan más la imagen híbrida final, por lo que hay que aumentar la distancia para distinguir una imagen de otra, aun así somos capaces de obtener un buen resultado.
+
+
+\newpage
+
+
+\subsection{Pareja de imágenes propia}
+
+Para las imágenes propias he escogido las siguientes imágenes:
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+      \includegraphics[scale = 1]{hibridas_color/will_smith.png}
+ 		 \caption{Will Smith.}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+      \includegraphics[scale = 1]{hibridas_color/morgan_freeman.png}
+ 		 \caption{Morgan Freeman.}
+	\end{subfigure}
+	\caption{Imágenes escogidas para realizar el bonus.}
+
+  	\label{fig:bonus}
+\end{figure}
+
+He escogido estas imágenes ya que se tratan de imágenes con fondos similares, ambas personas aparecen en la misma posición, con la posición de los rasgos de la cara coincidentes y ambos tienen el mismo tono de piel, por lo que no se crearían sombras extrañas al hacer la imagen híbrida. El resultado es el siguiente:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/W-F.png}
+ 		 \caption{Imágen hibrida de Will Smith y Morgan Freeman.}
+  		\label{fig:ej2al}
+
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{hibridas_color/PW-F.png}
+ 		 \caption{Pirámide gaussiana de la imágen hibrida de Will Smith y Morgan Freeman.}
+  		\label{fig:ej2al}
+
+\end{figure}
 
 \newpage
 
@@ -599,6 +883,15 @@ El resultado obtenido es el siguiente:
 	getDerivKernels - Documentación oficial de OpenCV.
 
 	\url{https://docs.opencv.org/4.4.0/d4/d86/group__imgproc__filter.html#ga6d6c23f7bd3f5836c31cfae994fc4aea}
+
+
+
+\bibitem{img_hibridas}
+
+	A. Oliva, A. Torralba, P.G. Schyns(2006). Hybrid Images. ACM Transactions onGraphics.
+
+	\url{http://olivalab.mit.edu/hybridimage.htm}
+
 
 \end{thebibliography}
 
