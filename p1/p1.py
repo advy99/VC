@@ -315,6 +315,7 @@ for i in range(5, 25, 4):
     plt.scatter(rango, kernel_2)
     plt.show()
 
+# mostramos un ejemplo con tam_mascara = 7 aplicandolo a una imagen, como comparacion
 mascara_primera_derivada = kernel_gaussiano_1d(func=derivada_f_gaussiana, tam_mascara=7)
 mascara_segunda_derivada = kernel_gaussiano_1d(func=segunda_derivada_f_gaussiana, tam_mascara=7)
 
@@ -494,6 +495,8 @@ def piramide_gaussiana_cv(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
 
     return solucion
 
+print("Ejercicio 2A")
+
 # probamos y comparamos
 piramide = piramide_gaussiana(einstein)
 
@@ -575,6 +578,7 @@ def piramide_laplaciana_cv(imagen, niveles=4, tipo_borde=cv.BORDER_REPLICATE):
 
     return solucion
 
+print("Ejercicio 2B")
 
 # probamos y comprobamos
 
@@ -630,9 +634,8 @@ def crear_imagen_hibrida(imagen_f_bajas, imagen_f_altas, sigma_img_f_bajas, sigm
 
 
 
+print("Ejercicio 3")
 
-#imagen_hibrida, img_f_bajas, img_f_altas = crear_imagen_hibrida(bird, plane, 3, 2)
-#imagen_hibrida, img_f_bajas, img_f_altas = crear_imagen_hibrida(einstein, marilyn, 3, 1.5)
 
 titulos = ["Original", "Bajas frecuencias", "Altas frecuencias"]
 
