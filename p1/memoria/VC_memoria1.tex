@@ -262,7 +262,231 @@ Podemos comprobar que obtenemos los resultados esperados, ya que el cálculo uti
 
 \subsection{Convolución gaussiana 2D}
 
-\subsection{Comparación entre implementación propia y OpenCV}
+Para desarrollar este ejercicio he creado la función \texttt{aplicar\_convolucion}, que recibe como parámetros la imagen, la máscara a aplicar de forma horizontal, la máscara a aplicar de forma vertical y el tipo de borde a añadir.
+
+Este ultimo parámetro lo utilizaremos de cara a añadir bordes extra a la imagen, ya que si no aplicamos esta operación parte de los pixeles originales de las imágenes no se les aplicarían las máscaras, ya que el propio tamaño de máscara no permite centrarlas en dichos píxeles sin salir de la imágen.
+
+
+Esta función sigue los siguientes pasos:
+
+\begin{enumerate}
+	\item Aplicar borde: Aplica un borde de tamaño $(len(mascara) - 1) / 2$ a la imagen utilizando la función de OpenCV \texttt{copyMakeBorder}.
+	\item Crea una matriz rellena de ceros del tamaño de la imagen original (sin bordes), donde almacenaremos la imagen final.
+	\item Recorre la imágen con borde (matriz) desde el tamaño del borde hasta el extremo de la imagen menos los bordes, de forma que pasamos por todos los píxeles de la imagen original. En este recorrido aplica la máscara horizontal, multiplicando la máscara por los pixeles de una misma fila, pero tantos como tamaño de máscara, centrando la máscara en el pixel actual que estamos recorriendo. De esta forma se aplica la máscara en el pixel que queremos y utilizando los bordes añadidos para los valores de la máscara que en principio quedarían fuera de la imagen original. Almacena el resultado en la matriz creada en el paso 2.
+	\item Tras aplicar la máscara horizontal, volvemos a añadir los bordes a la imagen con la máscara aplicada, de cara a aplicar la máscara vertical.
+	\item Repetimos el paso 3, pero al multiplicar la máscara, en lugar de mantener la fila y coger pixeles de distintas columnas, mantenemos la columna y escogemos un rango de píxeles en las filas para aplicar la máscara vertical. Almacenamos el resultado en la matriz creada en el paso 2.
+\end{enumerate}
+
+Tras esta explicación de como funciona la función cabe mencionar distintos detalles de implementación.
+
+Para empezar, vemos como aplico las máscaras de forma separada, y no como una convolución 2D. Esta decisión es tomada ya que el resultado obtenido es el mismo, sin embargo son necesarias menos operaciones para realizar el cálculo gracias a la separabilidad de las convoluciones 2D, haciendo más eficiente esta forma de aplicar las máscaras\cite{separabilidad_2D}.
+
+Otro detalle es el hecho de añadir los bordes cada vez que aplico una convolución 1D. Aunque de esta forma es necesario mayor tiempo de cómputo al tener que volver a añadir bordes, se obtiene un mejor resultados en los bordes de la imagen resultante ya que si solamente se añaden bordes al inicio, al aplicar la segunda convolución usaría los bordes de la imagen original, que si utilizamos una técnica de replicado de bordes son distintos a los bordes de la imagen con una máscara aplicada, haciendo que al aplicar la segunda máscara en las zonas cercanas a los bordes el resultado no sea tan exacto.
+
+
+Finalmente, obtenemos este resultado aplicando una máscara de tamaño 9 y comparandola con GaussianBlur, con un tamaño de máscara 9 es el siguiente:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{ejercicio1-b.png}
+ 		 \caption{Comparación entre implementación propia y GaussianBlur}
+  		\label{fig:ej1b}
+
+\end{figure}
+
+Observamos como el resultado es similar, por lo que intuimos que la implementación tanto de la forma de obtener la máscara y la aplicación de la convolución es correcta.
+
+\subsection{Comparación de máscaras 1D, implementación propia y OpenCV}
+
+De cara a comparar mi implementación con OpenCV, como nos pide el ejercicio, he generado las máscaras 1D con distintos tamaños de máscara y sigma y las he dibujado utilizando MatPlotLib:
+
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-p5.png}
+ 		 \caption{Máscara primera derivada propia, t. máscara 5}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-cv5.png}
+ 		 \caption{Máscara primera derivada OpenCV, t. máscara 5}
+	\end{subfigure}
+	\caption{Comparación primera derivada, tamaño de máscara 5}
+  	\label{fig:ej1c5}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-2p5.png}
+ 		 \caption{Máscara segunda derivada propia, t. máscara 5}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-2cv5.png}
+ 		 \caption{Máscara segunda derivada OpenCV, t. máscara 5}
+	\end{subfigure}
+	\caption{Comparación segunda derivada, tamaño de máscara 5}
+
+  	\label{fig:ej1c5}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-p9.png}
+ 		 \caption{Máscara primera derivada propia, t. máscara 9}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-cv9.png}
+ 		 \caption{Máscara primera derivada OpenCV, t. máscara 9}
+	\end{subfigure}
+	\caption{Comparación primera derivada, tamaño de máscara 9}
+  	\label{fig:ej1c5}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-2p9.png}
+ 		 \caption{Máscara segunda derivada propia, t. máscara 9}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-2cv9.png}
+ 		 \caption{Máscara segunda derivada OpenCV, t. máscara 9}
+	\end{subfigure}
+	\caption{Comparación segunda derivada, tamaño de máscara 9}
+
+  	\label{fig:ej1c5}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-p13.png}
+ 		 \caption{Máscara primera derivada propia, t. máscara 13}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-cv13.png}
+ 		 \caption{Máscara primera derivada OpenCV, t. máscara 13}
+	\end{subfigure}
+	\caption{Comparación primera derivada, tamaño de máscara 13}
+  	\label{fig:ej1c5}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-2p13.png}
+ 		 \caption{Máscara segunda derivada propia, t. máscara 13}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-2cv13.png}
+ 		 \caption{Máscara segunda derivada OpenCV, t. máscara 13}
+	\end{subfigure}
+	\caption{Comparación segunda derivada, tamaño de máscara 13}
+
+  	\label{fig:ej1c5}
+\end{figure}
+
+
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-p17.png}
+ 		 \caption{Máscara primera derivada propia, t. máscara 17}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-cv17.png}
+ 		 \caption{Máscara primera derivada OpenCV, t. máscara 17}
+	\end{subfigure}
+	\caption{Comparación primera derivada, tamaño de máscara 17}
+  	\label{fig:ej1c5}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-2p17.png}
+ 		 \caption{Máscara segunda derivada propia, t. máscara 17}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-2cv17.png}
+ 		 \caption{Máscara segunda derivada OpenCV, t. máscara 17}
+	\end{subfigure}
+	\caption{Comparación segunda derivada, tamaño de máscara 17}
+
+  	\label{fig:ej1c5}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-p21.png}
+ 		 \caption{Máscara primera derivada propia, t. máscara 21}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-cv21.png}
+ 		 \caption{Máscara primera derivada OpenCV, t. máscara 21}
+	\end{subfigure}
+	\caption{Comparación primera derivada, tamaño de máscara 21}
+  	\label{fig:ej1c5}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-2p21.png}
+ 		 \caption{Máscara segunda derivada propia, t. máscara 21}
+	\end{subfigure}
+	\hspace{1cm}
+	\begin{subfigure}[t]{0.4\textwidth}
+		\centering
+		\includegraphics[width = \textwidth]{cmp-2cv21.png}
+ 		 \caption{Máscara segunda derivada OpenCV, t. máscara 21}
+	\end{subfigure}
+	\caption{Comparación segunda derivada, tamaño de máscara 21}
+
+  	\label{fig:ej1c5}
+\end{figure}
+
 
 \subsection{Máscaras Laplacianas}
 
@@ -288,6 +512,11 @@ Podemos comprobar que obtenemos los resultados esperados, ya que el cálculo uti
 
 
 \begin{thebibliography}{9}
+
+\bibitem{separabilidad_2D}
+	Prueba de separabilidad para las convoluciones 2D.
+
+	\url{https://www.songho.ca/dsp/convolution/convolution2d_separable.html}
 
 \end{thebibliography}
 
