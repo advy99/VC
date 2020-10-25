@@ -541,11 +541,41 @@ Por último en esta función finalmente normalizaremos la imagen en el rango [0-
 
 \section{Ejercicio 2: Pirámides}
 
+En este ejercicio se nos pide crear dos tipos de pirámides, la Gaussiana y la Laplaciana, de al menos cuatro niveles (cuatro subsamples, la imagen original cuenta como nivel 0). Para esto se pueden utilizar los métodos de OpenCV pyrUp y pyrDown, sin embargo yo he realizado una implementación propia y las he comparado con la implementación de OpenCV.
+
 \subsection{Pirámide Gaussiana}
+
+De cara a obtener la pirámide gaussiana he implementado la función \texttt{piramide\_gaussiana}, que recibe como parámetros una imagen, el número de niveles que tendrá la pirámide, por defecto 4, el sigma a utilizar para el alisamiento antes de reescalar al siguiente nivel, por defecto 1, y el tipo de borde a utilizar al aplicar el alisamiento, por defecto \texttt{cv.BORDER\_REPLICATE}, es decir, réplica de bordes.
+
+Esta función devolverá una lista con las imágenes que conforman la pirámide.
+
+La función se basa en calcular la máscara gaussiana con el sigma dado, y tras esto, para cada nivel de la pirámide, aplicar dicha máscara al nivel anterior y formar un nuevo nivel con la imagen alisada por la máscara gaussiana, pero utilizando solo las filas y columnas pares, de forma que el tamaño de la imagen es de la mitad tanto en filas como en columnas.
+
+
+Debido a que MatPlotLib escala las imágenes para que se muestren todas del mismo tamaño, he creado la función \texttt{apilar\_piramide} que dada una piramide, apila de forma vertical los niveles (a partir del uno) de la pirámide, y apila el nivel cero (imagen horizontal) por la derecha, de forma que el resultado sea una única imagen a mostrar y se visualice con las proporciones correctas.
+
+El resultado obtenido es el siguiente:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{ej2AG.png}
+ 		 \caption{Pirámide gaussiana usando la implementación propia y utilizando OpenCV.}
+  		\label{fig:ej2ag}
+
+\end{figure}
+
 
 \subsection{Pirámide Laplaciana}
 
 
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{ej2AL.png}
+ 		 \caption{Pirámide laplaciana usando la implementación propia y utilizando OpenCV.}
+  		\label{fig:ej2al}
+
+\end{figure}
 
 \section{Ejercicio 3: Imágenes híbridas}
 
