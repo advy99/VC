@@ -262,7 +262,7 @@ nueva_imagen = aplicar_convolucion(bicycle, mascara, mascara)
 imagen_cv = cv.GaussianBlur(bicycle, ksize=(9,9), sigmaX=-1, sigmaY=-1)
 
 titulos = ["Original", "Convolución con máscara gaussiana propia", "Con cv.GaussianBlur"]
-mostrar_imagenes([bicycle, nueva_imagen, imagen_cv], titulos)
+mostrar_imagenes([bicycle, nueva_imagen, imagen_cv], titulos, "Ejercicio 1.B.")
 
 
 input("\n---------- Pulsa una tecla para continuar ----------\n")
@@ -274,37 +274,42 @@ Apartado C
 
 """
 
-# comparamos los kernels obtenidos con los kernels de getDerivKernels
-mascara_primera_derivada = kernel_gaussiano_1d(func=derivada_f_gaussiana, tam_mascara=15)
-mascara_segunda_derivada = kernel_gaussiano_1d(func=segunda_derivada_f_gaussiana, tam_mascara=15)
+for i in range(5, 25, 4):
 
-kernel_15, basura = cv.getDerivKernels(1, 1, 15)
 
-kernel_15 = kernel_15.reshape((15,))
+    # comparamos los kernels obtenidos con los kernels de getDerivKernels
+    mascara_primera_derivada = kernel_gaussiano_1d(func=derivada_f_gaussiana, tam_mascara=i)
+    mascara_segunda_derivada = kernel_gaussiano_1d(func=segunda_derivada_f_gaussiana, tam_mascara=i)
 
-kernel_15_2, basura = cv.getDerivKernels(2, 2, 15)
+    kernel, basura = cv.getDerivKernels(1, 1, i)
 
-kernel_15_2 = kernel_15_2.reshape((15,))
+    kernel = kernel.reshape((i,))
 
-plt.clf()
-plt.title("Máscara primera derivada f. gaussiana propia, t. mascara = 15.")
-plt.scatter(range(15), mascara_primera_derivada)
-plt.show()
+    kernel_2, basura = cv.getDerivKernels(2, 2, i)
 
-plt.clf()
-plt.title("Máscara primera derivada f. gaussiana deriv kernels, t. mascara = 15.")
-plt.scatter(range(15), kernel_15)
-plt.show()
+    kernel_2 = kernel_2.reshape((i,))
 
-plt.clf()
-plt.title("Máscara segunda derivada f. gaussiana propia, t.mascara = 15.")
-plt.scatter(range(15), mascara_segunda_derivada)
-plt.show()
+    rango = range(-i//2, i//2)
 
-plt.clf()
-plt.title("Máscara segunda derivada f. gaussiana deriv kernels, t.mascara = 15.")
-plt.scatter(range(15), kernel_15_2)
-plt.show()
+    plt.clf()
+    plt.title("Máscara primera derivada f. gaussiana propia, t. mascara = {}.".format(i))
+    plt.scatter(rango, mascara_primera_derivada)
+    plt.show()
+
+    plt.clf()
+    plt.title("Máscara primera derivada f. gaussiana deriv kernels, t. mascara = {}.".format(i))
+    plt.scatter(rango, kernel)
+    plt.show()
+
+    plt.clf()
+    plt.title("Máscara segunda derivada f. gaussiana propia, t.mascara = {}.".format(i))
+    plt.scatter(rango, mascara_segunda_derivada)
+    plt.show()
+
+    plt.clf()
+    plt.title("Máscara segunda derivada f. gaussiana deriv kernels, t.mascara = {}.".format(i))
+    plt.scatter(rango, kernel_2)
+    plt.show()
 
 
 input("\n---------- Pulsa una tecla para continuar ----------\n")
