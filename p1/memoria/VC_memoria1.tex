@@ -173,11 +173,92 @@ Filtros de máscaras  \hspace{0.05cm} }
 
 \section*{Introducción}
 
+Para esta primera práctica trabajaremos los filtros de máscaras, con el objetivo de mostrar como usando técnicas de filtrado lineal es posible extraer información relevante de una imagen para su posterior interpretación.
 
+En esta práctica también nos centraremos en comparar nuestra implementación propia con la implementación de la biblioteca OpenCV. Por este motivo, en todos los ejercicios utilizaré funciones implementadas en el fichero de Python entregado y en ciertos momentos utilizaré las funciones de filtros que nos ofrece OpenCV pero solo de forma comparativa.
 
 \section{Ejercicio 1: Máscaras}
 
-\subsection{Máscaras discretas}
+Este ejercicio trata sobre el cálculo de las máscaras Gaussianas que utilizaremos durante toda la práctica, la aplicación de dichas máscaras a una imagen en forma de una convolución 2D y el cálculo de máscaras normalizadas de la Laplaciana de la Gaussiana con nuestras propias máscaras.
+
+Además de la implementación de todas estas máscaras, también realizaremos una comparación con las operaciones equivalentes de OpenCV.
+
+\subsection{Máscaras discretas 1D}
+
+De cara a obtener las distintas máscaras discretas he implementado tres funciones de Python:
+
+\begin{enumerate}
+	\item Función Gaussiana: Devuelve el valor de la función gaussiana en un punto dado, para un sigma dado.
+	\item Función derivada de la Gaussiana: Devuelve el valor de la derivada de la gaussiana en un punto dado, para un sigma dado.
+	\item Función segunda derivada de la Gaussiana: Devuelve el valor de la segunda derivada de la gaussiana en un punto dado, para un sigma dado.
+\end{enumerate}
+
+
+Para el cálculo de las distintas funciones simplemente he evaluado la función gaussiana, obviando la constante $c$ como hemos visto en teoría y como nos comentaron en prácticas:
+
+\begin{figure}[H]
+	\centering
+	\[ f(x) = c \cdot e^{- \frac{x^2}{2\sigma^2}} \]
+	\caption{Función gaussiana.}
+	\label{f_gaussiana}
+\end{figure}
+
+\newpage
+
+De cara a las funciones derivadas, simplemente he derivado la función gaussiana respecto de $x$:
+
+
+\begin{figure}[H]
+	\centering
+	\[ \frac{\partial{f(x)}}{\partial{x}} = -\frac{e^{ -\frac{x^2}{2 \cdot \sigma^2} } \cdot x}{\sigma^2} \]
+	\caption{Derivada de la función gaussiana.}
+	\label{d_f_gaussiana}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\[ \frac{\partial{f(x)}}{\partial{x^2}} = -\frac{- x^2 + \sigma^2}{e^{ \frac{x^2}{2 \cdot \sigma^2} } \cdot \sigma^4} \]
+	\caption{Segunda derivada de la función gaussiana.}
+	\label{2d_f_gaussiana}
+\end{figure}
+
+
+Tras implementar estas funciones, que simplemente evaluavan una función matemática, he implementado la función \texttt{kernel\_gaussiano\_1d}, que obligatoriamente ha de recibir, o bien un sigma, o un tamaño para la máscara. Opcionalmenten puede recibir sobre que función se va a calcular la máscara, por defecto la función gaussiana, de forma que con esta función podamos calcular la máscara gaussiana, la máscara de la derivada de la gaussiana si le pasamos dicha función y la de la segunda derivada de la gaussiana si le pasamos esta última.
+
+Como he comentado, esta función ha de recibir un sigma o un tamaño de máscara. Si recibe un sigma, calcula el tamaño de la máscara y devuelve la máscara evaluando los valores desde el entero menor a $\frac{tam\_mascara}{2}$ hasta $\frac{tam\_mascara}{2} + 1$ con el sigma dado. Si recibe el tamaño de máscara, calculará el sigma y devolverá la máscara calculada de la misma forma. Si no recibimos ni un sigma ni un tamaño de máscara, devolverá una máscara vacia.
+
+Además, como vimos en teoría, si calculamos la máscara utilizando la función gaussiana antes de devolver el resultado lo noralizaremos dividiendo cada elemento de la máscara por la suma de todos, de forma que la máscara sume uno.
+
+De cara a calcular el sigma o el tamaño de máscara seguiremos esta fórmula:
+
+
+\begin{figure}[H]
+	\centering
+	\[ 2 \cdot 3 \cdot \sigma + 1 = T\]
+	\caption{Calculo de sigma o del tamaño de máscara.}
+	\label{sigma_t}
+\end{figure}
+
+Siendo T el tamaño de la máscara, podemos calcular dicho T o sigma en caso de que nos proporcionen T. Utilizamos esta fórmula ya que nos asegura que el tamaño de la máscara es al menos $3 \cdot \sigma$ como nos se nos recomendaba en teoría.
+
+Otro detalle a observar es que si nos dan un sigma, el tamaño de la máscara es impar ya que, como también nos enseñaron en teoría, el uso de máscaras pares es problemático ya que no podemos centrar la máscara en un punto concreto de la imagen.
+
+Tras realizar distintas ejecuciones de cara a probar el funcionamiento de esta función obtenemos lo siguiente:
+
+\begin{lstlisting}
+kernel_gaussiano_1d(sigma=1)
+[0.00443305 0.05400558 0.24203623 0.39905028 0.24203623 0.05400558 0.00443305]
+
+kernel_gaussiano_1d(func=derivada_f_gaussiana, tam_mascara=5)
+[0.04999048442209038, 0.7304680515562869, -0.0, -0.7304680515562869, -0.04999048442209038]
+
+kernel_gaussiano_1d(func=derivada_f_gaussiana, tam_mascara=7)
+[0.033326989614726917, 0.2706705664732254, 0.6065306597126334, -0.0, -0.6065306597126334, -0.2706705664732254, -0.033326989614726917]
+\end{lstlisting}
+
+
+Podemos comprobar que obtenemos los resultados esperados, ya que el cálculo utilizando la función gaussiana hace que la máscara sume uno, y tanto la primera como segunda derivada suman cero, como era de esperar al haber estudiado estas funciones de forma teórica.
+
 
 \subsection{Convolución gaussiana 2D}
 
