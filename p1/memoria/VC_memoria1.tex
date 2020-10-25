@@ -275,6 +275,7 @@ Esta función sigue los siguientes pasos:
 	\item Recorre la imágen con borde (matriz) desde el tamaño del borde hasta el extremo de la imagen menos los bordes, de forma que pasamos por todos los píxeles de la imagen original. En este recorrido aplica la máscara horizontal, multiplicando la máscara por los pixeles de una misma fila, pero tantos como tamaño de máscara, centrando la máscara en el pixel actual que estamos recorriendo. De esta forma se aplica la máscara en el pixel que queremos y utilizando los bordes añadidos para los valores de la máscara que en principio quedarían fuera de la imagen original. Almacena el resultado en la matriz creada en el paso 2.
 	\item Tras aplicar la máscara horizontal, volvemos a añadir los bordes a la imagen con la máscara aplicada, de cara a aplicar la máscara vertical.
 	\item Repetimos el paso 3, pero al multiplicar la máscara, en lugar de mantener la fila y coger pixeles de distintas columnas, mantenemos la columna y escogemos un rango de píxeles en las filas para aplicar la máscara vertical. Almacenamos el resultado en la matriz creada en el paso 2.
+	\item Normalizar la imagen final.
 \end{enumerate}
 
 Tras esta explicación de como funciona la función cabe mencionar distintos detalles de implementación.
@@ -283,6 +284,7 @@ Para empezar, vemos como aplico las máscaras de forma separada, y no como una c
 
 Otro detalle es el hecho de añadir los bordes cada vez que aplico una convolución 1D. Aunque de esta forma es necesario mayor tiempo de cómputo al tener que volver a añadir bordes, se obtiene un mejor resultados en los bordes de la imagen resultante ya que si solamente se añaden bordes al inicio, al aplicar la segunda convolución usaría los bordes de la imagen original, que si utilizamos una técnica de replicado de bordes son distintos a los bordes de la imagen con una máscara aplicada, haciendo que al aplicar la segunda máscara en las zonas cercanas a los bordes el resultado no sea tan exacto.
 
+Tambien mencionar que finalmente se normaliza la imagen en el rango [0-1] sin perdida de información ya que al aplicar la convolución la imagen no estará normalizada y dará problemas si intentamos visualizarla.
 
 Finalmente, obtenemos este resultado aplicando una máscara de tamaño 9 y comparandola con GaussianBlur, con un tamaño de máscara 9 es el siguiente:
 
@@ -299,7 +301,7 @@ Observamos como el resultado es similar, por lo que intuimos que la implementaci
 
 \subsection{Comparación de máscaras 1D, implementación propia y OpenCV}
 
-De cara a comparar mi implementación con OpenCV, como nos pide el ejercicio, he generado las máscaras 1D con distintos tamaños de máscara y sigma y las he dibujado utilizando MatPlotLib:
+De cara a comparar mi implementación con las máscaras obtenidas con getDerivKernels de OpenCV, como nos pide el ejercicio, he generado las máscaras 1D con distintos tamaños de máscara y sigma y las he dibujado utilizando MatPlotLib:
 
 
 \begin{figure}[H]
@@ -488,7 +490,52 @@ De cara a comparar mi implementación con OpenCV, como nos pide el ejercicio, he
 \end{figure}
 
 
+Tras observar todas las máscaras podemos observar dos grandes diferencias:
+
+\begin{enumerate}
+	\item Las máscaras de la primera derivada están invertidas con respecto al eje X. En nuestra implementación propia a la izquierda del 0 hay un máximo y a la derecha un mínimo, mientras que las máscaras obtenidas con getDerivKernels es al contrario.
+	\item Cuanto mayor es el tamaño de la máscara, menor es el rango de valores en nuestras máscaras y mayor en las máscaras generadas por getDerivKernels.
+\end{enumerate}
+
+La primera diferencia es irrelevante respecto al funcionamiento ya que las máscaras son simetricas, luego la suma de los valores es igualmente cero.
+
+Con respecto a la segunda diferencia, y en general todas las diferencias que podamos encontrar, es debidas a que mientras nosotros calculamos las máscaras de forma exacta, OpenCV hace una aproximación de las derivadas de la gaussiana utilizando los operadores de Sobel y Scharr\cite{getDerivKernelsCV}, haciendo que en realidad las máscaras obtenidas por OpenCV, aunque el tiempo de cómputo es menor, no son tan exactas.
+
+Por último, a pesar de estas diferencias vemos que los resultados son equivalentes:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1d-1s7.png}
+ 		 \caption{Comparación máscaras primera derivada con tamaño de máscara 7.}
+  		\label{fig:ej1d}
+
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1d-2s7.png}
+ 		 \caption{Comparación máscaras segunda derivada con tamaño de máscara 7.}
+  		\label{fig:ej1d}
+
+\end{figure}
+
 \subsection{Máscaras Laplacianas}
+
+Como sabemos, la máscara laplaciana es la suma de la segunda derivada de la gaussiana con respecto de $x$ y la segunda derivada de la gaussiana con respecto de $y$, y tras esto normalizamos la suma multiplicandola por $\sigma^2$. Como sabemos de teoría, la segunda derivada de la gaussiana es simétrica de $x$ y de $y$.
+
+Por este motivo, de cara a calcular la imagen con la máscara laplaciana aplicaremos una convolución de la imagen con la máscara de la segunda derivada como máscara horizontal y la máscara gaussiana como máscara vertical, obteniendo la imagen que llamaremos $G_{xx}$, por otro lado obtendremos la imagen $G_{yy}$ aplicando a la imagen original la máscara de la segunda derivada como máscara vertical y la máscara gaussiana como máscara horizontal. Finalmente sumaremos las imagenes $G_{xx}$ y $G_{yy}$ y el resultado lo multiplicaremos por $\sigma^2$, de forma que esta será la imagen final con la máscara aplicada.
+
+Por último en esta función finalmente normalizaremos la imagen en el rango [0-1] para su correcta visualización.
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{ej1d.png}
+ 		 \caption{Máscara laplaciana con sigma 1 y con sigma 3.}
+  		\label{fig:ej1d}
+
+\end{figure}
 
 
 
@@ -517,6 +564,11 @@ De cara a comparar mi implementación con OpenCV, como nos pide el ejercicio, he
 	Prueba de separabilidad para las convoluciones 2D.
 
 	\url{https://www.songho.ca/dsp/convolution/convolution2d_separable.html}
+
+\bibitem{getDerivKernelsCV}
+	getDerivKernels - Documentación oficial de OpenCV.
+
+	\url{https://docs.opencv.org/4.4.0/d4/d86/group__imgproc__filter.html#ga6d6c23f7bd3f5836c31cfae994fc4aea}
 
 \end{thebibliography}
 
