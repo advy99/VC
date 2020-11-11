@@ -173,6 +173,11 @@ mostrarEvolucion(evolucion_entrenamiento)
 #########################################################################
 
 # A completar
+prediccion = modelo.predict(x_test, batch_size = tam_batch, verbose = 1)
+
+
+precision_test = calcularAccuracy(y_test, prediccion)
+print("Accuracy en el conjunto test: {}".format(precision_test))
 
 #########################################################################
 ########################## MEJORA DEL MODELO ############################
