@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #########################################################################
@@ -26,7 +27,7 @@ from keras.datasets import cifar100
 ######## FUNCIÓN PARA CARGAR Y MODIFICAR EL CONJUNTO DE DATOS ###########
 #########################################################################
 
-# A esta función solo se la llama una vez. Devuelve 4 
+# A esta función solo se la llama una vez. Devuelve 4
 # vectores conteniendo, por este orden, las imágenes
 # de entrenamiento, las clases de las imágenes de
 # entrenamiento, las imágenes del conjunto de test y
@@ -48,7 +49,7 @@ def cargarImagenes():
     test_idx = np.reshape(test_idx, -1)
     x_test = x_test[test_idx]
     y_test = y_test[test_idx]
-    
+
     # Transformamos los vectores de clases en matrices.
     # Cada componente se convierte en un vector de ceros
     # con un uno en la componente correspondiente a la
@@ -56,14 +57,14 @@ def cargarImagenes():
     # necesario para la clasificación multiclase en keras.
     y_train = np_utils.to_categorical(y_train, 25)
     y_test = np_utils.to_categorical(y_test, 25)
-    
+
     return x_train , y_train , x_test , y_test
 
 #########################################################################
 ######## FUNCIÓN PARA OBTENER EL ACCURACY DEL CONJUNTO DE TEST ##########
 #########################################################################
 
-# Esta función devuelve la accuracy de un modelo, 
+# Esta función devuelve la accuracy de un modelo,
 # definida como el porcentaje de etiquetas bien predichas
 # frente al total de etiquetas. Como parámetros es
 # necesario pasarle el vector de etiquetas verdaderas
@@ -94,7 +95,7 @@ def mostrarEvolucion(hist):
     plt.plot(val_loss)
     plt.legend(['Training loss', 'Validation loss'])
     plt.show()
-    
+
     acc = hist.history['acc']
     val_acc = hist.history['val_acc']
     plt.plot(acc)
@@ -108,23 +109,48 @@ def mostrarEvolucion(hist):
 
 # A completar
 
+# forma de las imagenes, como nos dice el guion
+forma_entrada = (32, 32, 3)
+
+modelo = Sequential()
+modelo.add( Conv2d(6, kernel_size = (5,5), padding = "valid", input_shape = forma_entrada ) )
+modelo.add( Activation("relu") )
+modelo.add( MaxPooling2D(pool_size = (2, 2) ) )
+modelo.add( Conv2d(16, kernel_size = (5,5), padding = "valid" ) )
+modelo.add( Activation("relu") )
+modelo.add( MaxPooling2D(pool_size = (2, 2) ) )
+modelo.add( Flatten() )
+modelo.add( Dense(units = 50) )
+modelo.add( Activation("relu") )
+modelo.add( Dense(units = 25) )
+# es necesaria una activación softmax para transformar la salida
+modelo.add( Activation("softmax") )
+
 #########################################################################
 ######### DEFINICIÓN DEL OPTIMIZADOR Y COMPILACIÓN DEL MODELO ###########
 #########################################################################
 
 # A completar
+optimizador = SGD()
 
+model.compile( loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["acurracy"] )
 
 # Una vez tenemos el modelo base, y antes de entrenar, vamos a guardar los
 # pesos aleatorios con los que empieza la red, para poder reestablecerlos
 # después y comparar resultados entre no usar mejoras y sí usarlas.
-weights = model.get_weights()
+pesos_iniciales = model.get_weights()
+
+# para ver como ha quedado el modelo
+print( modelo.summary() )
 
 #########################################################################
 ###################### ENTRENAMIENTO DEL MODELO #########################
 #########################################################################
 
 # A completar
+x_train, y_train, x_test, y_test = cargarImagenes()
+
+entrenamiento = model.fit(x_train, y_train)
 
 #########################################################################
 ################ PREDICCIÓN SOBRE EL CONJUNTO DE TEST ###################
