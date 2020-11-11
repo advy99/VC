@@ -133,6 +133,7 @@ modelo.add( Activation("softmax") )
 # A completar
 optimizador = SGD()
 
+# es multiclase, luego usamos categorical_crossentropy como perdida
 model.compile( loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["acurracy"] )
 
 # Una vez tenemos el modelo base, y antes de entrenar, vamos a guardar los
