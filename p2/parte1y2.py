@@ -16,6 +16,8 @@ import keras.utils as np_utils
 
 # Importar modelos y capas que se van a usar
 # A completar
+from keras.models import Sequential
+from keras.layers import Dense, Conv2D, MaxPooling2D, Activation, Flatten
 
 # Importar el optimizador a usar
 from keras.optimizers import SGD
@@ -90,14 +92,14 @@ def calcularAccuracy(labels, preds):
 # funciones fit() y fit_generator()).
 def mostrarEvolucion(hist):
     loss = hist.history['loss']
-    val_loss = hist.history[' val_loss']
+    val_loss = hist.history['val_loss']
     plt.plot(loss)
     plt.plot(val_loss)
     plt.legend(['Training loss', 'Validation loss'])
     plt.show()
 
-    acc = hist.history['acc']
-    val_acc = hist.history['val_acc']
+    acc = hist.history['accuracy']
+    val_acc = hist.history['val_accuracy']
     plt.plot(acc)
     plt.plot(val_acc)
     plt.legend(['Training accuracy','Validation accuracy'])
@@ -113,10 +115,10 @@ def mostrarEvolucion(hist):
 forma_entrada = (32, 32, 3)
 
 modelo = Sequential()
-modelo.add( Conv2d(6, kernel_size = (5,5), padding = "valid", input_shape = forma_entrada ) )
+modelo.add( Conv2D(6, kernel_size = (5,5), padding = "valid", input_shape = forma_entrada ) )
 modelo.add( Activation("relu") )
 modelo.add( MaxPooling2D(pool_size = (2, 2) ) )
-modelo.add( Conv2d(16, kernel_size = (5,5), padding = "valid" ) )
+modelo.add( Conv2D(16, kernel_size = (5,5), padding = "valid" ) )
 modelo.add( Activation("relu") )
 modelo.add( MaxPooling2D(pool_size = (2, 2) ) )
 modelo.add( Flatten() )
@@ -134,12 +136,12 @@ modelo.add( Activation("softmax") )
 optimizador = SGD()
 
 # es multiclase, luego usamos categorical_crossentropy como perdida
-model.compile( loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["acurracy"] )
+modelo.compile( loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"] )
 
 # Una vez tenemos el modelo base, y antes de entrenar, vamos a guardar los
 # pesos aleatorios con los que empieza la red, para poder reestablecerlos
 # después y comparar resultados entre no usar mejoras y sí usarlas.
-pesos_iniciales = model.get_weights()
+pesos_iniciales = modelo.get_weights()
 
 # para ver como ha quedado el modelo
 print( modelo.summary() )
@@ -151,7 +153,20 @@ print( modelo.summary() )
 # A completar
 x_train, y_train, x_test, y_test = cargarImagenes()
 
-entrenamiento = model.fit(x_train, y_train)
+# valor por defecto para batch_size en keras al hacer
+tam_batch = 32
+
+# porcentaje de entrenamiento que utilizará como validación
+porcentaje_validacion = 0.1
+
+# número de epocas a entrenar el modelo
+epocas = 40
+
+# entrenamos el modelo. Utilizamos verbose para ver una barra de progreso
+evolucion_entrenamiento = modelo.fit(x_train, y_train, batch_size = tam_batch, epochs = epocas, validation_split = porcentaje_validacion, verbose = 1)
+
+# mostramos la evolución del modelo tras entrenarlo
+mostrarEvolucion(evolucion_entrenamiento)
 
 #########################################################################
 ################ PREDICCIÓN SOBRE EL CONJUNTO DE TEST ###################
