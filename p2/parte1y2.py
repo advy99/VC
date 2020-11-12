@@ -18,6 +18,7 @@ import keras.utils as np_utils
 # A completar
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Activation, Flatten
+from keras.preprocessing.image import ImageDataGenerator
 
 # Importar el optimizador a usar
 from keras.optimizers import SGD
@@ -179,11 +180,45 @@ prediccion = modelo.predict(x_test, batch_size = tam_batch, verbose = 1)
 precision_test = calcularAccuracy(y_test, prediccion)
 print("Accuracy en el conjunto test: {}".format(precision_test))
 
+input("------------- Pulsa cualquier tecla para continuar -------------------")
+
 #########################################################################
 ########################## MEJORA DEL MODELO ############################
 #########################################################################
+
 
 # A completar. Tanto la normalización de los datos como el data
 # augmentation debe hacerse con la clase ImageDataGenerator.
 # Se recomienda ir entrenando con cada paso para comprobar
 # en qué grado mejora cada uno de ellos.
+
+generador_image_data = ImageDataGenerator(featurewise_center = True, featurewise_std_normalization = True, validation_split = 0.1)
+generador_image_data.fit(x_train)
+
+modelo.set_weights(pesos_iniciales)
+
+
+evolucion_entrenamiento_normalizado = modelo.fit_generator(
+    generador_image_data.flow(x_train, y_train, batch_size = tam_batch, subset = 'training'),
+    validation_data = generador_image_data.flow(x_train, y_train, batch_size = tam_batch, subset = 'validation'),
+    steps_per_epoch = len(x_train) * 0.9 / tam_batch,
+    epochs = epocas,
+    validation_steps = len(x_train) * 0.1 / tam_batch
+)
+
+
+mostrarEvolucion(evolucion_entrenamiento_normalizado)
+
+# sin validacion para el test
+generador_image_data_test = ImageDataGenerator(featurewise_center = True, featurewise_std_normalization = True)
+generador_image_data_test.fit(x_test)
+
+prediccion_normalizada = modelo.predict_generator(generador_image_data_test.flow(x_test, batch_size = 1, shuffle = False), steps = len(x_test), verbose = 1)
+
+
+precision_test_normalizado = calcularAccuracy(y_test, prediccion_normalizada)
+print("Accuracy en el conjunto test con normalización: {}".format(precision_test_normalizado))
+
+
+input("------------- Pulsa cualquier tecla para continuar -------------------")
+
