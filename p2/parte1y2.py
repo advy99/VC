@@ -112,6 +112,8 @@ def mostrarEvolucion(hist):
 
 # A completar
 
+print("Ejercicio 1: Creación del modelo")
+
 # forma de las imagenes, como nos dice el guion
 forma_entrada = (32, 32, 3)
 
@@ -164,6 +166,7 @@ porcentaje_validacion = 0.1
 epocas = 40
 
 # entrenamos el modelo. Utilizamos verbose para ver una barra de progreso
+
 evolucion_entrenamiento = modelo.fit(x_train, y_train, batch_size = tam_batch, epochs = epocas, validation_split = porcentaje_validacion, verbose = 1)
 
 # mostramos la evolución del modelo tras entrenarlo
@@ -186,11 +189,14 @@ input("------------- Pulsa cualquier tecla para continuar -------------------")
 ########################## MEJORA DEL MODELO ############################
 #########################################################################
 
+print("Apartado 2: Mejora del modelo")
 
 # A completar. Tanto la normalización de los datos como el data
 # augmentation debe hacerse con la clase ImageDataGenerator.
 # Se recomienda ir entrenando con cada paso para comprobar
 # en qué grado mejora cada uno de ellos.
+
+print("Apartado 2.1: Normalización de datos")
 
 generador_image_data = ImageDataGenerator(featurewise_center = True, featurewise_std_normalization = True, validation_split = 0.1)
 generador_image_data.fit(x_train)
@@ -218,6 +224,50 @@ prediccion_normalizada = modelo.predict_generator(generador_image_data_test.flow
 
 precision_test_normalizado = calcularAccuracy(y_test, prediccion_normalizada)
 print("Accuracy en el conjunto test con normalización: {}".format(precision_test_normalizado))
+
+
+input("------------- Pulsa cualquier tecla para continuar -------------------")
+
+
+
+
+print("Apartado 2.2: Aumento de datos")
+
+generador_image_data_aumento = ImageDataGenerator(featurewise_center = True,
+                                                  featurewise_std_normalization = True,
+                                                  horizontal_flip = True,
+                                                  zoom_range = [0.5, 1.5],
+                                                  validation_split = 0.1)
+generador_image_data_aumento.fit(x_train)
+
+generador_image_data_aumento_val = ImageDataGenerator(featurewise_center = True,
+                                                      featurewise_std_normalization = True,
+                                                      validation_split= 0.1)
+generador_image_data_aumento_val.fit(x_train)
+
+modelo.set_weights(pesos_iniciales)
+
+
+evolucion_entrenamiento_norm_aumento = modelo.fit_generator(
+    generador_image_data_aumento.flow(x_train, y_train, batch_size = tam_batch, subset = 'training'),
+    validation_data = generador_image_data_aumento_val.flow(x_train, y_train, batch_size = tam_batch, subset = 'validation'),
+    steps_per_epoch = len(x_train) * 0.9 / tam_batch,
+    epochs = epocas,
+    validation_steps = len(x_train) * 0.1 / tam_batch
+)
+
+
+mostrarEvolucion(evolucion_entrenamiento_norm_aumento)
+
+# sin validacion para el test
+generador_image_data_test = ImageDataGenerator(featurewise_center = True, featurewise_std_normalization = True)
+generador_image_data_test.fit(x_test)
+
+prediccion_norm_aumento = modelo.predict_generator(generador_image_data_test.flow(x_test, batch_size = 1, shuffle = False), steps = len(x_test), verbose = 1)
+
+
+precision_test_norm_aumento = calcularAccuracy(y_test, prediccion_norm_aumento)
+print("Accuracy en el conjunto test con normalizacion y aumento: {}".format(precision_test_norm_aumento))
 
 
 input("------------- Pulsa cualquier tecla para continuar -------------------")
