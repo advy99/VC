@@ -21,7 +21,7 @@ from keras.layers import Dense, Conv2D, MaxPooling2D, Activation, Flatten, Batch
 from keras.preprocessing.image import ImageDataGenerator
 
 # Importar el optimizador a usar
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam, RMSprop
 
 # Importar el conjunto de datos
 from keras.datasets import cifar100
@@ -110,6 +110,17 @@ def mostrarEvolucion(hist):
 ################## DEFINICIÓN DEL MODELO BASENET ########################
 #########################################################################
 
+x_train, y_train, x_test, y_test = cargarImagenes()
+
+# valor por defecto para batch_size en keras al hacer
+tam_batch = 32
+
+# porcentaje de entrenamiento que utilizará como validación
+porcentaje_validacion = 0.1
+
+# número de epocas a entrenar el modelo
+epocas = 30
+
 # A completar
 
 print("Ejercicio 1: Creación del modelo")
@@ -154,16 +165,6 @@ print( modelo.summary() )
 #########################################################################
 
 # A completar
-x_train, y_train, x_test, y_test = cargarImagenes()
-
-# valor por defecto para batch_size en keras al hacer
-tam_batch = 32
-
-# porcentaje de entrenamiento que utilizará como validación
-porcentaje_validacion = 0.1
-
-# número de epocas a entrenar el modelo
-epocas = 30
 
 # entrenamos el modelo. Utilizamos verbose para ver una barra de progreso
 
@@ -196,7 +197,7 @@ print("Apartado 2: Mejora del modelo")
 # Se recomienda ir entrenando con cada paso para comprobar
 # en qué grado mejora cada uno de ellos.
 
-print("Apartado 2.1: Normalización de datos")
+print("Apartado 2: Normalización de datos")
 
 generador_image_data = ImageDataGenerator(featurewise_center = True, featurewise_std_normalization = True, validation_split = 0.1)
 generador_image_data.fit(x_train)
@@ -231,7 +232,7 @@ input("------------- Pulsa cualquier tecla para continuar -------------------")
 
 
 
-print("Apartado 2.2: Aumento de datos")
+print("Apartado 2: Aumento de datos")
 
 generador_image_data_aumento = ImageDataGenerator(featurewise_center = True,
                                                   featurewise_std_normalization = True,
@@ -272,18 +273,18 @@ print("Accuracy en el conjunto test con normalizacion y aumento: {}".format(prec
 
 input("------------- Pulsa cualquier tecla para continuar -------------------")
 
-print("Ejercicio 2.4: Con BatchNormalization")
+print("Ejercicio 2: Con BatchNormalization")
 
 # forma de las imagenes, como nos dice el guion
 forma_entrada = (32, 32, 3)
 
 modelo_batchnormalization = Sequential()
 modelo_batchnormalization.add( Conv2D(6, kernel_size = (5,5), padding = "same", input_shape = forma_entrada ) )
-modelo_batchnormalization.add( BatchNormalization() )
+modelo_batchnormalization.add( BatchNormalization(renorm = True) )
 modelo_batchnormalization.add( Activation("relu") )
 modelo_batchnormalization.add( MaxPooling2D(pool_size = (2, 2) ) )
 modelo_batchnormalization.add( Conv2D(16, kernel_size = (5,5), padding = "same" ) )
-modelo_batchnormalization.add( BatchNormalization() )
+modelo_batchnormalization.add( BatchNormalization(renorm = True) )
 modelo_batchnormalization.add( Activation("relu") )
 modelo_batchnormalization.add( Dropout(0.2) )
 modelo_batchnormalization.add( MaxPooling2D(pool_size = (2, 2) ) )
@@ -337,5 +338,79 @@ prediccion_norm_aumento_batch = modelo_batchnormalization.predict_generator(gene
 
 
 precision_test_norm_aumento_batch = calcularAccuracy(y_test, prediccion_norm_aumento_batch)
-print("Accuracy en el conjunto test con normalizacion y aumento: {}".format(precision_test_norm_aumento_batch))
+print("Accuracy en el conjunto test con normalizacion, aumento y batch normalization: {}".format(precision_test_norm_aumento_batch))
+
+
+
+input("------------- Pulsa cualquier tecla para continuar -------------------")
+
+print("Ejercicio 2: Con Dropout")
+
+# forma de las imagenes, como nos dice el guion
+forma_entrada = (32, 32, 3)
+
+modelo_dropout = Sequential()
+modelo_dropout.add( Conv2D(6, kernel_size = (5,5), padding = "same", input_shape = forma_entrada ) )
+modelo_dropout.add( BatchNormalization(renorm = True) )
+modelo_dropout.add( Activation("relu") )
+modelo_dropout.add( MaxPooling2D(pool_size = (2, 2) ) )
+modelo_dropout.add( Conv2D(16, kernel_size = (5,5), padding = "same" ) )
+modelo_dropout.add( BatchNormalization(renorm = True) )
+modelo_dropout.add( Activation("relu") )
+modelo_dropout.add( Dropout(0.2) )
+modelo_dropout.add( MaxPooling2D(pool_size = (2, 2) ) )
+modelo_dropout.add( Flatten() )
+modelo_dropout.add( Dense(units = 50) )
+modelo_dropout.add( Activation("relu") )
+modelo_dropout.add( Dropout(0.1) )
+modelo_dropout.add( Dense(units = 25) )
+# es necesaria una activación softmax para transformar la salida
+modelo_dropout.add( Activation("softmax") )
+
+#########################################################################
+######### DEFINICIÓN DEL OPTIMIZADOR Y COMPILACIÓN DEL MODELO ###########
+#########################################################################
+
+# A completar
+optimizador = SGD()
+
+# es multiclase, luego usamos categorical_crossentropy como perdida
+modelo_dropout.compile( loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"] )
+
+generador_image_data_dropout = ImageDataGenerator(featurewise_center = True,
+                                                  featurewise_std_normalization = True,
+                                                  horizontal_flip = True,
+                                                  validation_split = porcentaje_validacion)
+generador_image_data_dropout.fit(x_train)
+
+generador_image_data_val_dropout = ImageDataGenerator(featurewise_center = True,
+                                                      featurewise_std_normalization = True,
+                                                      validation_split= porcentaje_validacion)
+generador_image_data_val_dropout.fit(x_train)
+
+
+
+evolucion_entrenamiento_dropout = modelo_dropout.fit_generator(
+    generador_image_data_dropout.flow(x_train, y_train, batch_size = tam_batch, subset = 'training'),
+    validation_data = generador_image_data_val_dropout.flow(x_train, y_train, batch_size = tam_batch, subset = 'validation'),
+    steps_per_epoch = len(x_train) * (1.0 - porcentaje_validacion) / tam_batch,
+    epochs = epocas,
+    validation_steps = len(x_train) * porcentaje_validacion / tam_batch
+)
+
+
+mostrarEvolucion(evolucion_entrenamiento_dropout)
+
+# sin validacion para el test
+generador_image_data_test_dropout = ImageDataGenerator(featurewise_center = True, featurewise_std_normalization = True)
+generador_image_data_test_dropout.fit(x_test)
+
+prediccion_norm_dropout = modelo_dropout.predict_generator(generador_image_data_test_dropout.flow(x_test, batch_size = 1, shuffle = False), steps = len(x_test), verbose = 1)
+
+
+precision_test_norm_dropout = calcularAccuracy(y_test, prediccion_norm_dropout)
+print("Accuracy en el conjunto test con normalizacion, aumento, batch normalization y dropout: {}".format(precision_test_norm_dropout))
+
+
+
 
