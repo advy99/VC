@@ -14,15 +14,15 @@ Original file is located at
 # Descargar las imágenes de http://www.vision.caltech.edu/visipedia/CUB-200.html
 # Descomprimir el fichero.
 # Descargar también el fichero list.tar.gz, descomprimirlo y guardar los ficheros
-# test.txt y train.txt dentro de la carpeta de imágenes anterior. Estos 
+# test.txt y train.txt dentro de la carpeta de imágenes anterior. Estos
 # dos ficheros contienen la partición en train y test del conjunto de datos.
 
 ##### EN CASO DE USAR COLABORATORY
 # Sube tanto las imágenes como los ficheros text.txt y train.txt a tu drive.
-# Después, ejecuta esta celda y sigue las instrucciones para montar 
+# Después, ejecuta esta celda y sigue las instrucciones para montar
 # tu drive en colaboratory.
-from google.colab import drive
-drive.mount('/content/drive')
+#from google.colab import drive
+#drive.mount('/content/drive')
 
 #########################################################################
 ################ CARGAR LAS LIBRERÍAS NECESARIAS ########################
@@ -56,13 +56,13 @@ from keras.optimizers import SGD
 
 # Dado un fichero train.txt o test.txt y el path donde se encuentran los
 # ficheros y las imágenes, esta función lee las imágenes
-# especificadas en ese fichero y devuelve las imágenes en un vector y 
+# especificadas en ese fichero y devuelve las imágenes en un vector y
 # sus clases en otro.
 
 def leerImagenes(vec_imagenes, path):
   clases = np.array([img.split('/')[0] for img in vec_imagenes])
-  imagenes = np.array([img_to_array(load_img(path + "/" + img, 
-                                             target_size = (224, 224))) 
+  imagenes = np.array([img_to_array(load_img(path + "/" + img,
+                                             target_size = (224, 224)))
                        for img in vec_imagenes])
   return imagenes, clases
 
@@ -71,7 +71,7 @@ def leerImagenes(vec_imagenes, path):
 #########################################################################
 
 # Usando la función anterior, y dado el path donde se encuentran las
-# imágenes y los archivos "train.txt" y "test.txt", devuelve las 
+# imágenes y los archivos "train.txt" y "test.txt", devuelve las
 # imágenes y las clases de train y test para usarlas con keras
 # directamente.
 
@@ -79,12 +79,12 @@ def cargarDatos(path):
   # Cargamos los ficheros
   train_images = np.loadtxt(path + "/train.txt", dtype = str)
   test_images = np.loadtxt(path + "/test.txt", dtype = str)
-  
+
   # Leemos las imágenes con la función anterior
   train, train_clases = leerImagenes(train_images)
   test, test_clases = leerImagenes(test_images)
-  
-  # Pasamos los vectores de las clases a matrices 
+
+  # Pasamos los vectores de las clases a matrices
   # Para ello, primero pasamos las clases a números enteros
   clases_posibles = np.unique(np.copy(train_clases))
   for i in range(len(clases_posibles)):
@@ -94,7 +94,7 @@ def cargarDatos(path):
   # Después, usamos la función to_categorical()
   train_clases = np_utils.to_categorical(train_clases, 200)
   test_clases = np_utils.to_categorical(test_clases, 200)
-  
+
   # Barajar los datos
   train_perm = np.random.permutation(len(train))
   train = train[train_perm]
@@ -103,14 +103,14 @@ def cargarDatos(path):
   test_perm = np.random.permutation(len(test))
   test = test[test_perm]
   test_clases = test_clases[test_perm]
-  
+
   return train, train_clases, test, test_clases
 
 #########################################################################
 ######## FUNCIÓN PARA OBTENER EL ACCURACY DEL CONJUNTO DE TEST ##########
 #########################################################################
 
-# Esta función devuelve el accuracy de un modelo, definido como el 
+# Esta función devuelve el accuracy de un modelo, definido como el
 # porcentaje de etiquetas bien predichas frente al total de etiquetas.
 # Como parámetros es necesario pasarle el vector de etiquetas verdaderas
 # y el vector de etiquetas predichas, en el formato de keras (matrices
@@ -120,9 +120,9 @@ def cargarDatos(path):
 def calcularAccuracy(labels, preds):
   labels = np.argmax(labels, axis = 1)
   preds = np.argmax(preds, axis = 1)
-  
+
   accuracy = sum(labels == preds)/len(labels)
-  
+
   return accuracy
 
 #########################################################################
@@ -167,8 +167,8 @@ def mostrarEvolucion(hist):
 # A completar
 
 # Las características extraídas en el paso anterior van a ser la entrada
-# de un pequeño modelo de dos capas Fully Conected, donde la última será la que 
-# nos clasifique las clases de Caltech-UCSD (200 clases). De esta forma, es 
+# de un pequeño modelo de dos capas Fully Conected, donde la última será la que
+# nos clasifique las clases de Caltech-UCSD (200 clases). De esta forma, es
 # como si hubiéramos fijado todos los parámetros de ResNet50 y estuviésemos
 # entrenando únicamente las capas añadidas. Definir dicho modelo.
 # A completar: definición del modelo, del optimizador y compilación y
