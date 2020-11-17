@@ -17,7 +17,7 @@ import keras.utils as np_utils
 # Importar modelos y capas que se van a usar
 # A completar
 from keras.models import Sequential
-from keras.layers import Dense, Conv2D, MaxPooling2D, Activation, Flatten
+from keras.layers import Dense, Conv2D, MaxPooling2D, Activation, Flatten, BatchNormalization, Dropout
 from keras.preprocessing.image import ImageDataGenerator
 
 # Importar el optimizador a usar
@@ -163,7 +163,7 @@ tam_batch = 32
 porcentaje_validacion = 0.1
 
 # número de epocas a entrenar el modelo
-epocas = 40
+epocas = 30
 
 # entrenamos el modelo. Utilizamos verbose para ver una barra de progreso
 
@@ -207,9 +207,9 @@ modelo.set_weights(pesos_iniciales)
 evolucion_entrenamiento_normalizado = modelo.fit_generator(
     generador_image_data.flow(x_train, y_train, batch_size = tam_batch, subset = 'training'),
     validation_data = generador_image_data.flow(x_train, y_train, batch_size = tam_batch, subset = 'validation'),
-    steps_per_epoch = len(x_train) * 0.9 / tam_batch,
+    steps_per_epoch = len(x_train) * (1.0 - porcentaje_validacion) / tam_batch,
     epochs = epocas,
-    validation_steps = len(x_train) * 0.1 / tam_batch
+    validation_steps = len(x_train) * porcentaje_validacion / tam_batch
 )
 
 
@@ -237,12 +237,12 @@ generador_image_data_aumento = ImageDataGenerator(featurewise_center = True,
                                                   featurewise_std_normalization = True,
                                                   horizontal_flip = True,
                                                   zoom_range = [0.5, 1.5],
-                                                  validation_split = 0.1)
+                                                  validation_split = porcentaje_validacion)
 generador_image_data_aumento.fit(x_train)
 
 generador_image_data_aumento_val = ImageDataGenerator(featurewise_center = True,
                                                       featurewise_std_normalization = True,
-                                                      validation_split= 0.1)
+                                                      validation_split= porcentaje_validacion)
 generador_image_data_aumento_val.fit(x_train)
 
 modelo.set_weights(pesos_iniciales)
@@ -251,9 +251,9 @@ modelo.set_weights(pesos_iniciales)
 evolucion_entrenamiento_norm_aumento = modelo.fit_generator(
     generador_image_data_aumento.flow(x_train, y_train, batch_size = tam_batch, subset = 'training'),
     validation_data = generador_image_data_aumento_val.flow(x_train, y_train, batch_size = tam_batch, subset = 'validation'),
-    steps_per_epoch = len(x_train) * 0.9 / tam_batch,
+    steps_per_epoch = len(x_train) * (1.0 - porcentaje_validacion) / tam_batch,
     epochs = epocas,
-    validation_steps = len(x_train) * 0.1 / tam_batch
+    validation_steps = len(x_train) * porcentaje_validacion / tam_batch
 )
 
 
@@ -271,4 +271,71 @@ print("Accuracy en el conjunto test con normalizacion y aumento: {}".format(prec
 
 
 input("------------- Pulsa cualquier tecla para continuar -------------------")
+
+print("Ejercicio 2.4: Con BatchNormalization")
+
+# forma de las imagenes, como nos dice el guion
+forma_entrada = (32, 32, 3)
+
+modelo_batchnormalization = Sequential()
+modelo_batchnormalization.add( Conv2D(6, kernel_size = (5,5), padding = "same", input_shape = forma_entrada ) )
+modelo_batchnormalization.add( BatchNormalization() )
+modelo_batchnormalization.add( Activation("relu") )
+modelo_batchnormalization.add( MaxPooling2D(pool_size = (2, 2) ) )
+modelo_batchnormalization.add( Conv2D(16, kernel_size = (5,5), padding = "same" ) )
+modelo_batchnormalization.add( BatchNormalization() )
+modelo_batchnormalization.add( Activation("relu") )
+modelo_batchnormalization.add( Dropout(0.2) )
+modelo_batchnormalization.add( MaxPooling2D(pool_size = (2, 2) ) )
+modelo_batchnormalization.add( Flatten() )
+modelo_batchnormalization.add( Dense(units = 50) )
+modelo_batchnormalization.add( Activation("relu") )
+modelo_batchnormalization.add( Dropout(0.1) )
+modelo_batchnormalization.add( Dense(units = 25) )
+# es necesaria una activación softmax para transformar la salida
+modelo_batchnormalization.add( Activation("softmax") )
+
+#########################################################################
+######### DEFINICIÓN DEL OPTIMIZADOR Y COMPILACIÓN DEL MODELO ###########
+#########################################################################
+
+# A completar
+optimizador = SGD()
+
+# es multiclase, luego usamos categorical_crossentropy como perdida
+modelo_batchnormalization.compile( loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"] )
+
+generador_image_data_aumento_batch = ImageDataGenerator(featurewise_center = True,
+                                                  featurewise_std_normalization = True,
+                                                  horizontal_flip = True,
+                                                  validation_split = porcentaje_validacion)
+generador_image_data_aumento_batch.fit(x_train)
+
+generador_image_data_aumento_val_batch = ImageDataGenerator(featurewise_center = True,
+                                                      featurewise_std_normalization = True,
+                                                      validation_split= porcentaje_validacion)
+generador_image_data_aumento_val_batch.fit(x_train)
+
+
+
+evolucion_entrenamiento_norm_aumento_bach = modelo_batchnormalization.fit_generator(
+    generador_image_data_aumento_batch.flow(x_train, y_train, batch_size = tam_batch, subset = 'training'),
+    validation_data = generador_image_data_aumento_val_batch.flow(x_train, y_train, batch_size = tam_batch, subset = 'validation'),
+    steps_per_epoch = len(x_train) * (1.0 - porcentaje_validacion) / tam_batch,
+    epochs = epocas,
+    validation_steps = len(x_train) * porcentaje_validacion / tam_batch
+)
+
+
+mostrarEvolucion(evolucion_entrenamiento_norm_aumento_bach)
+
+# sin validacion para el test
+generador_image_data_test_batch = ImageDataGenerator(featurewise_center = True, featurewise_std_normalization = True)
+generador_image_data_test_batch.fit(x_test)
+
+prediccion_norm_aumento_batch = modelo_batchnormalization.predict_generator(generador_image_data_test_batch.flow(x_test, batch_size = 1, shuffle = False), steps = len(x_test), verbose = 1)
+
+
+precision_test_norm_aumento_batch = calcularAccuracy(y_test, prediccion_norm_aumento_batch)
+print("Accuracy en el conjunto test con normalizacion y aumento: {}".format(precision_test_norm_aumento_batch))
 
