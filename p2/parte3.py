@@ -322,6 +322,11 @@ evolucion_fine = modelo.fit_generator(
 
 mostrarEvolucion(evolucion_fine)
 
+predicciones_fine = modelo.predict_generator(generador_datos_test.flow(x_test, batch_size = 1, shuffle = False), steps = len(x_test), verbose = 1)
+
+accuracy_fine = calcularAccuracy(y_test, predicciones_fine)
+print("Accuracy con fine tuning (antes de entrenar todo el modelo): {}".format(accuracy_fine))
+
 modelo_resnet50.trainable = True
 
 modelo = Model(inputs = modelo_resnet50.input, outputs = salida_resnet)
