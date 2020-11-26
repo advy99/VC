@@ -35,16 +35,21 @@ import numpy as np
 import keras
 import keras.utils as np_utils
 from keras.preprocessing.image import load_img,img_to_array
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 # Importar el optimizador a usar
 from keras.optimizers import SGD
 
 # Importar modelos y capas específicas que se van a usar
 
+from keras.preprocessing.image import ImageDataGenerator
+from keras.models import Model, Sequential
+
+from keras.layers import Dense, Conv2D, MaxPooling2D, Activation, Flatten, BatchNormalization, Dropout, GlobalAveragePooling2D
 
 # Importar el modelo ResNet50 y su respectiva función de preprocesamiento,
 # que es necesario pasarle a las imágenes para usar este modelo
+from keras.applications.resnet50 import ResNet50, preprocess_input
 
 
 # Importar el optimizador a usar
@@ -81,8 +86,8 @@ def cargarDatos(path):
   test_images = np.loadtxt(path + "/test.txt", dtype = str)
 
   # Leemos las imágenes con la función anterior
-  train, train_clases = leerImagenes(train_images)
-  test, test_clases = leerImagenes(test_images)
+  train, train_clases = leerImagenes(train_images, path)
+  test, test_clases = leerImagenes(test_images, path)
 
   # Pasamos los vectores de las clases a matrices
   # Para ello, primero pasamos las clases a números enteros
@@ -145,8 +150,8 @@ def mostrarEvolucion(hist):
   plt.legend(['Training loss', 'Validation loss'])
   plt.show()
 
-  acc = hist.history['acc']
-  val_acc = hist.history['val_acc']
+  acc = hist.history['accuracy']
+  val_acc = hist.history['val_accuracy']
   plt.plot(acc)
   plt.plot(val_acc)
   plt.legend(['Training accuracy', 'Validation accuracy'])
@@ -158,13 +163,33 @@ def mostrarEvolucion(hist):
 # con sus respectivos argumentos.
 # A completar
 
+# si se usa colab, cambiar a la ruta donde tenga las imagenes
+RUTA_IMAGENES = "imagenes"
+x_train, y_train, x_test, y_test = cargarDatos(RUTA_IMAGENES)
+
+
+tam_batch = 30
+epocas = 10
+porcentaje_val = 0.1
+optimizador = SGD()
+
+generador_datos_resnet50 = ImageDataGenerator(preprocessing_function = preprocess_input)
 
 # Definir el modelo ResNet50 (preentrenado en ImageNet y sin la última capa).
 # A completar
+modelo_resnet50 = ResNet50(include_top = False, weights = "imagenet", pooling = "avg")
+
+modelo_resnet50.trainable = False
 
 
 # Extraer las características las imágenes con el modelo anterior.
 # A completar
+
+# extraemos las de entrenamiento
+caracteristicas_train = modelo_resnet50.predict_generator(generador_datos_resnet50.flow(x_train, batch_size = 1, shuffle = False), steps = len(x_train), verbose = 1)
+
+# extraemos las caracteristicas de test
+caracteristicas_test = modelo_resnet50.predict_generator(generador_datos_resnet50.flow(x_test, batch_size = 1, shuffle = False), steps = len(x_test), verbose = 1)
 
 # Las características extraídas en el paso anterior van a ser la entrada
 # de un pequeño modelo de dos capas Fully Conected, donde la última será la que
@@ -175,16 +200,150 @@ def mostrarEvolucion(hist):
 # entrenamiento del modelo.
 # En la función fit() puedes usar el argumento validation_split
 
+# creamos el modelo Fully Conected de dos capas
+modelo_dos_capas_FC = Sequential()
+modelo_dos_capas_FC.add(Dense(256, activation = "relu", input_shape = (2048,) ))
+modelo_dos_capas_FC.add(Dense(200, activation = "softmax"))
+
+
+# compilamos el modelo
+
+modelo_dos_capas_FC.compile(loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"])
+
+
+# mostramos el resultado
+print(modelo_dos_capas_FC.summary())
+
+
+# guardamos los pesos iniciales por si reentrenamos
+pesos_iniciales_FC = modelo_dos_capas_FC.get_weights()
+
+# entrenamos el modelo
+evolucion = modelo_dos_capas_FC.fit(caracteristicas_train, y_train, epochs = epocas, batch_size = tam_batch, validation_split = porcentaje_val, verbose = 1)
+
+
+mostrarEvolucion(evolucion)
+
+# predecimos los valores de test
+prediccion_test = modelo_dos_capas_FC.predict(caracteristicas_test, batch_size = tam_batch, verbose = 1)
+
+# obtenemos el accuracy
+accuracy_test = calcularAccuracy(y_test, prediccion_test)
+
+print("El accuracy en test es de: {}".format(accuracy_test))
+
+
+print("Apartado 3.1.B:")
+
+
+# con esto conseguimos el modelo sin la ultima capa de pooling
+modelo_resnet50_sin_av_pooling = ResNet50(include_top = False, weights = "imagenet", pooling = None)
+
+
+
+# Extraer las características las imágenes con el modelo anterior.
+# A completar
+
+# extraemos las de entrenamiento
+caracteristicas_train_b = modelo_resnet50_sin_av_pooling.predict_generator(generador_datos_resnet50.flow(x_train, batch_size = 1, shuffle = False), steps = len(x_train), verbose = 1)
+
+# extraemos las caracteristicas de test
+caracteristicas_test_b = modelo_resnet50_sin_av_pooling.predict_generator(generador_datos_resnet50.flow(x_test, batch_size = 1, shuffle = False), steps = len(x_test), verbose = 1)
+
+forma = caracteristicas_train_b.shape[1:]
+
+nuevo_modelo = Sequential()
+nuevo_modelo.add(Dropout(0.2, input_shape = forma ))
+nuevo_modelo.add( Conv2D(250, kernel_size = (5,5), padding = "valid" ) )
+nuevo_modelo.add( BatchNormalization(renorm = True) )
+nuevo_modelo.add( Activation("relu") )
+nuevo_modelo.add(Dropout(0.2) )
+nuevo_modelo.add(GlobalAveragePooling2D())
+nuevo_modelo.add(Dense(200, activation = "softmax"))
+
+
+nuevo_modelo.compile(loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"])
+
+print(nuevo_modelo.summary())
+
+evolucion_b = nuevo_modelo.fit(caracteristicas_train_b, y_train, epochs = epocas, batch_size = tam_batch, validation_split = porcentaje_val, verbose = 1)
+
+
+mostrarEvolucion(evolucion_b)
+
+# predecimos los valores de test
+prediccion_test_b = nuevo_modelo.predict(caracteristicas_test_b, batch_size = tam_batch, verbose = 1)
+
+# obtenemos el accuracy
+accuracy_test_b = calcularAccuracy(y_test, prediccion_test_b)
+
+print("El accuracy en test para el apartado B es de: {}".format(accuracy_test_b))
+
+
+
 """## Reentrenar ResNet50 (fine tunning)"""
 
 # Definir un objeto de la clase ImageDataGenerator para train y otro para test
 # con sus respectivos argumentos.
 # A completar
+generador_datos_train = ImageDataGenerator(validation_split = porcentaje_val, preprocessing_function = preprocess_input)
+
+
+generador_datos_test = ImageDataGenerator(preprocessing_function = preprocess_input)
 
 
 # Añadir nuevas capas al final de ResNet50 (recuerda que es una instancia de
 # la clase Model).
+salida_resnet = modelo_resnet50.output
+salida_resnet = Dropout(0.2) (salida_resnet)
+salida_resnet = BatchNormalization(renorm = True) (salida_resnet)
+salida_resnet = Activation("relu") (salida_resnet)
+salida_resnet = Dropout(0.2) (salida_resnet)
+salida_resnet = Dense(200, activation = "softmax") (salida_resnet)
 
+
+modelo = Model(inputs = modelo_resnet50.input, outputs = salida_resnet)
 
 # Compilación y entrenamiento del modelo.
 # A completar.
+modelo.compile(loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"])
+
+
+
+# entrenamos con el modelo_resnet50 congelado, solo se entrenará la
+# segunda parte
+evolucion_fine = modelo.fit_generator(
+    generador_datos_train.flow(x_train, y_train, batch_size = tam_batch, subset = "training"),
+    epochs = epocas,
+    validation_data = generador_datos_train.flow(x_train, y_train, batch_size = tam_batch, subset = "validation"),
+    steps_per_epoch = len(x_train) * (1 - porcentaje_val)/tam_batch,
+    validation_steps = len(x_train) * porcentaje_val / tam_batch
+)
+
+mostrarEvolucion(evolucion_fine)
+
+modelo_resnet50.trainable = True
+
+modelo = Model(inputs = modelo_resnet50.input, outputs = salida_resnet)
+
+modelo.compile(loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"])
+
+
+# entrenamos con el modelo_resnet50 congelado, solo se entrenará la
+# segunda parte
+evolucion_fine = modelo.fit(
+    generador_datos_train.flow(x_train, y_train, batch_size = tam_batch, subset = "training"),
+    epochs = epocas,
+    validation_data = generador_datos_train.flow(x_train, y_train, batch_size = tam_batch, subset = "validation"),
+    steps_per_epoch = len(x_train) * (1 - porcentaje_val)/tam_batch,
+    validation_steps = len(x_train) * porcentaje_val / tam_batch
+)
+
+mostrarEvolucion(evolucion_fine)
+
+predicciones_fine = modelo.predict_generator(generador_datos_test.flow(x_test, batch_size = 1, shuffle = False), steps = len(x_test), verbose = 1)
+
+accuracy_fine = calcularAccuracy(y_test, predicciones_fine)
+print("Accuracy con fine tuning: {}".format(accuracy_fine))
+
+
