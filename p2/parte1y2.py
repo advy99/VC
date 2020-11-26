@@ -26,6 +26,19 @@ from keras.optimizers import SGD, Adam, RMSprop
 # Importar el conjunto de datos
 from keras.datasets import cifar100
 
+
+SEED = 1
+
+# establecemos todas las semillas aleatorias al mismo valor
+import random
+random.seed(SEED)
+
+import numpy as np
+np.random.seed(SEED)
+
+import tensorflow as tf
+tf.random.set_seed(SEED)
+
 #########################################################################
 ######## FUNCIÓN PARA CARGAR Y MODIFICAR EL CONJUNTO DE DATOS ###########
 #########################################################################
