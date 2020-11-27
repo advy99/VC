@@ -175,6 +175,8 @@ Redes Neuronales Convolucionales \hspace{0.05cm} }
 
 En esta práctica trabajaremos con redes neuronales convolucionales profundas, de cara a obtener experiencia en el diseño y entrenamiento de las mismas utilizando el módulo Keras de Python.
 
+Las redes neuronales convolucionales profundas se componen de operaciones estocásticas, por lo que para obtener los mismos resultados en todos los casos he mantenido la misma semilla en todas las ejecuciones y es la semilla establecida en el código entregado junto a este PDF.
+
 \section{Apartado 1: BaseNet en CIFAR100}
 
 Trabajaremos con el conjunto de datos CIFAR100, que consta de 60.000 imágenes de dimensión 32$\times$32$\times$3 de 100 clases distintas, es decir, 600 imágenes por clase. El conjunto dispone de 50.000 imágenes de entrenamiento y 10.000 imágenes de prueba. Para el desarollo de la práctica solo consideraremos 25 de las 100 clases, por lo tanto el conjunto de entrenamiento tendrá 12500 imágenes y el de prueba 2500. En todos los casos utilizarémos el 10\% del conjunto de entrenamiento como validación.
@@ -303,6 +305,30 @@ Accuracy en el conjunto test: 0.438
 
 Hemos visto que el resultado obtenido no es el mejor posible, por lo que en este apartado trataremos de mejorar el modelo. Como se nos comenta en el enunciado, con una buena combinación de capas podemos obtener que el valor de precisión se acerque al 50\%, por este motivo en este apartado aplicaré mejoras en el modelo hasta llegar a ese porcentaje, y las demás mejoras las dejaré para el ejercicio de bonus, que se nos pide seguir mejorando el modelo.
 
+
+Debido a que las mejoras que he ido probando mejoraban poco a poco el modelo, cada mejora añadida la he mantenido en la siguiente mejora, es decir, por ejemplo, al aplicar normalización, en la mejora de aumento de datos cuenta con el aumento de datos y con la normalización.
+
+\subsection{Normalización de datos}
+
+De cara a obtener un entrenamiento más sencillo y sólido, he utilizado la normalización de datos. Para aplicar esta normalización he utilizado la clase \texttt{ImageDataGenerator}\cite{imagedatagenerator}
+
+
+
+\subsection{Aumento de datos}
+
+
+
+\subsection{Normalización con BatchNormalization}
+
+
+\subsection{Regularización con Dropout}
+
+
+
+
+
+
+
 \section{Apartado 3: Transferencia de modelos y ajuste fino con ResNet50 para la base de datos Caltech-UCSD}
 
 \section{Bonus: Propuestas de mejora de BaseNet}
@@ -370,6 +396,11 @@ Hemos visto que el resultado obtenido no es el mejor posible, por lo que en este
 
 	\url{https://keras.io/api/optimizers/sgd/}
 
+\bibitem{imagedatagenerator}
+
+	Clase ImageDataGenrator - Documentación de Keras
+
+	\url{https://keras.io/api/preprocessing/image/#imagedatagenerator-class}
 
 \end{thebibliography}
 
