@@ -250,7 +250,6 @@ print("Apartado 2: Aumento de datos")
 generador_image_data_aumento = ImageDataGenerator(featurewise_center = True,
                                                   featurewise_std_normalization = True,
                                                   horizontal_flip = True,
-                                                  zoom_range = [0.5, 1.5],
                                                   validation_split = porcentaje_validacion)
 generador_image_data_aumento.fit(x_train)
 
@@ -424,6 +423,76 @@ prediccion_norm_dropout = modelo_dropout.predict_generator(generador_image_data_
 precision_test_norm_dropout = calcularAccuracy(y_test, prediccion_norm_dropout)
 print("Accuracy en el conjunto test con normalizacion, aumento, batch normalization y dropout: {}".format(precision_test_norm_dropout))
 
+
+
+input("------------- Pulsa cualquier tecla para continuar -------------------")
+
+print("Ejercicio Bonus: ELU + Adam como optimizador")
+
+# forma de las imagenes, como nos dice el guion
+forma_entrada = (32, 32, 3)
+
+modelo_bonus = Sequential()
+modelo_bonus.add( Conv2D(6, kernel_size = (5,5), padding = "same", input_shape = forma_entrada ) )
+modelo_bonus.add( BatchNormalization(renorm = True) )
+modelo_bonus.add( Activation("elu") )
+modelo_bonus.add( MaxPooling2D(pool_size = (2, 2) ) )
+modelo_bonus.add( Conv2D(16, kernel_size = (5,5), padding = "same" ) )
+modelo_bonus.add( BatchNormalization(renorm = True) )
+modelo_bonus.add( Activation("elu") )
+modelo_bonus.add( Dropout(0.2) )
+modelo_bonus.add( MaxPooling2D(pool_size = (2, 2) ) )
+modelo_bonus.add( Flatten() )
+modelo_bonus.add( Dense(units = 50) )
+modelo_bonus.add( Activation("elu") )
+modelo_bonus.add( Dropout(0.1) )
+modelo_bonus.add( Dense(units = 25) )
+# es necesaria una activación softmax para transformar la salida
+modelo_bonus.add( Activation("softmax") )
+
+#########################################################################
+######### DEFINICIÓN DEL OPTIMIZADOR Y COMPILACIÓN DEL MODELO ###########
+#########################################################################
+
+# A completar
+optimizador = Adam()
+
+# es multiclase, luego usamos categorical_crossentropy como perdida
+modelo_bonus.compile( loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"] )
+
+generador_image_data_bonus = ImageDataGenerator(featurewise_center = True,
+                                                  featurewise_std_normalization = True,
+                                                  horizontal_flip = True,
+                                                  validation_split = porcentaje_validacion)
+generador_image_data_bonus.fit(x_train)
+
+generador_image_data_val_bonus = ImageDataGenerator(featurewise_center = True,
+                                                      featurewise_std_normalization = True,
+                                                      validation_split= porcentaje_validacion)
+generador_image_data_val_bonus.fit(x_train)
+
+
+
+evolucion_entrenamiento_bonus = modelo_bonus.fit_generator(
+    generador_image_data_bonus.flow(x_train, y_train, batch_size = tam_batch, subset = 'training'),
+    validation_data = generador_image_data_val_dropout.flow(x_train, y_train, batch_size = tam_batch, subset = 'validation'),
+    steps_per_epoch = len(x_train) * (1.0 - porcentaje_validacion) / tam_batch,
+    epochs = epocas,
+    validation_steps = len(x_train) * porcentaje_validacion / tam_batch
+)
+
+
+mostrarEvolucion(evolucion_entrenamiento_bonus)
+
+# sin validacion para el test
+generador_image_data_test_bonus = ImageDataGenerator(featurewise_center = True, featurewise_std_normalization = True)
+generador_image_data_test_bonus.fit(x_test)
+
+prediccion_norm_bonus = modelo_bonus.predict_generator(generador_image_data_test_bonus.flow(x_test, batch_size = 1, shuffle = False), steps = len(x_test), verbose = 1)
+
+
+precision_test_norm_bonus = calcularAccuracy(y_test, prediccion_norm_bonus)
+print("Accuracy en el conjunto test con normalizacion, aumento, batch normalization, dropout, elu y optimizador Adam: {}".format(precision_test_norm_bonus))
 
 
 
