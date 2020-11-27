@@ -173,8 +173,95 @@ Redes Neuronales Convolucionales \hspace{0.05cm} }
 
 \section*{Introducción}
 
+En esta práctica trabajaremos con redes neuronales convolucionales profundas, de cara a obtener experiencia en el diseño y entrenamiento de las mismas utilizando el módulo Keras de Python.
 
 \section{Apartado 1: BaseNet en CIFAR100}
+
+Trabajaremos con el conjunto de datos CIFAR100, que consta de 60.000 imágenes de dimensión 32$\times$32$\times$3 de 100 clases distintas, es decir, 600 imágenes por clase. El conjunto dispone de 50.000 imágenes de entrenamiento y 10.000 imágenes de prueba. Para el desarollo de la práctica solo consideraremos 25 de las 100 clases, por lo tanto el conjunto de entrenamiento tendrá 12500 imágenes y el de prueba 2500. En todos los casos utilizarémos el 10\% del conjunto de entrenamiento como validación.
+
+
+El modelo inicial que implementaremos será el siguiente:
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage{graphicx}
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Número de capa} & \textbf{Tipo de capa} & \textbf{\begin{tabular}[c]{@{}c@{}}Tam. kernel \\ (para convoluciones)\end{tabular}} & \textbf{Tamaño de entrada/salida} & \textbf{\begin{tabular}[c]{@{}c@{}}Canales de entrada/salida \\ para convoluciones)\end{tabular}} \\ \hline
+1                       & Conv2D                & 5                                                                                    & 32 | 28                           & 3 | 6                                                                                             \\ \hline
+2                       & Relu                  & -                                                                                    & 28 | 28                           & -                                                                                                 \\ \hline
+3                       & MaxPooling2D          & 2                                                                                    & 28 | 14                           & -                                                                                                 \\ \hline
+4                       & Conv2D                & 5                                                                                    & 14 | 10                           & 6 | 16                                                                                            \\ \hline
+5                       & Relu                  & -                                                                                    & 10 | 10                           & -                                                                                                 \\ \hline
+6                       & MaxPooling2D          & 2                                                                                    & 10 | 5                            & -                                                                                                 \\ \hline
+7                       & Linear                & -                                                                                    & 400 | 50                          & -                                                                                                 \\ \hline
+8                       & Relu                  & -                                                                                    & 50 | 50                           & -                                                                                                 \\ \hline
+9                       & Linear                & -                                                                                    & 50 | 25                           & -                                                                                                 \\ \hline
+\end{tabular}%
+}
+\end{table}
+
+
+\subsubsection{Implementación del modelo: Hiperparámetros y función de cada capa}
+
+Para implementar el modelo utilizaremos la clase \texttt{Sequential} del módulo de Python \texttt{keras.models}, que nos permite agrupar una serie de capas de una red que finalmente conformarán un objeto de la clase \texttt{Model}.
+
+En este modelo encontramos distintos tipos de capas:
+
+\begin{itemize}
+	\item Conv2D\cite{conv2d} : Capa cuya función es aplicar una convolución 2D a la entrada.
+	\item Relu\cite{relu} : Capa que implementa la función de activación ReLu, vista en teoría.
+	\item MaxPooling2D\cite{maxpooling2d} : Implementa la operación de max pooling para datos 2D. Reduce la muestra del input en el valor máximo dado por \texttt{pool\_size} en cada eje.
+	\item Linear : Implementada utilizando la capa \texttt{Dense}\cite{dense} de Keras, se trata de una capa densa totalmente conectada.
+\end{itemize}
+
+Tras esta simple introducción, pasaré a comentar detalladamente los hiperparámetros de cada capa utilizada:
+
+\textbf{Capa Conv2D:}
+
+En esta capa encontraremos distintos hiperparámetros, principalmente para controlar el tamaño de la máscara, la dimensionalidad de la salida, y otras especificaciones sobre las convoluciones 2D que vimos en la práctica 1. Los más interesantes son:
+
+\begin{itemize}
+	\item \texttt{filters}: Dimensionalidad de la salida, es decir, número de filtros de salida en la convolución.
+	\item \texttt{kernel\_size}: Tamaño del kernel 2D a aplicar.
+	\item \texttt{strides}: Desplazamiento con que aplicar la convolución, por defecto (1,1) ya que se aplicará a toda la entrada.
+	\item \texttt{padding}: Relleno al aplicar la convolución, de cara a poder aplicarla a los bordes de la matriz de entrada.
+	\item \texttt{activation}: Aplicar una función de activación al final de la operación.
+
+\end{itemize}
+
+En nuestro caso, el valor de \texttt{filters} tendrá el valor de los canales de salida dados en el modelo, \texttt{kernel\_size} tendrá el valor dado en la tabla del modelo, \texttt{strides} utilizaremos el valor por defecto de cara a aplicar la operación a toda la entrada, \texttt{padding} tomará el valor de \texttt{valid} de cara a no aplicar este relleno, y por último, \texttt{activation} no lo utilizaré, ya que he preferido añadir una capa propia de activación. El resultado es equivalente, pero me resulta más cómodo para realizar una clara distinción de que se tratan de operaciones distintas.
+
+\textbf{Capa activación ReLu:}
+
+Utilizaremos la capa \texttt{Activation} de Keras, que como único parámetro tiene el tipo de activación. En este caso, como nos pide el ejercicio, utilizaremos como función de activación \texttt{relu}. Esta cápa se encargará de decidir si una neurona es activada o no, calculando el peso de esta y teniendo en cuenta el sesgo que podría añadir. El objetivo de este tipo de capas son introducir no linearidad en el modelo.
+
+\textbf{Capa MaxPooling2D:}
+
+Tiene como objetivo reducir la dimensionalidad de la entrada.
+
+Aunque comparte los parámetros de \texttt{strides} y \texttt{padding} con la capa Conv2D, en nuestro caso el parámetro que nos interesa será \texttt{pool\_size}, este parámetro indicará el factor de reducción de la entrada. De esta forma, como vemos en la tabla del modelo, al aplicar un factor de escala de dos, reduciremos el tamaño de la entrada a la mitad.
+
+
+\textbf{Capa Dense:}
+
+Esta capa se trata de una capa de neuronas totalmente conectadas. En esta operación simplemente utilizaremos el parámetro \texttt{units}, con el que indicaremos el número de neuronas de la capa. El tamaño de salida de esta capa coincidirá con el parámetro \texttt{units}.
+
+
+\textbf{Capa Flatten:}
+
+
+Una observación es que vemos como justo antes de aplicar la capa \texttt{Dense} por primera vez en nuestro modelo, pasamos a tener una salida de tamaño cinco, y la entrada a esta capa será de cuatrocientos. Esto es debido a que utilizaremos una capa \texttt{Flatten}\cite{flatten} que reducirá la entrada como un vector 1D, de forma que la capa de tamaño cinco, al tener dieciséis canales, tendrá tamaño cuatrocientos.
+
+
+\textbf{Implementación del modelo:}
+
+El modelo por lo tanto se trata de una variable de tipo \texttt{Sequential}, al que con el método \texttt{add} añadiremos las distintas capas con los hiperparámetros dados. Se puede consultar más a fondo en el fichero de Python adjunto a este PDF.
+
+
 
 \section{Apartado 2: Mejora del modelo BaseNet}
 
@@ -190,6 +277,48 @@ Redes Neuronales Convolucionales \hspace{0.05cm} }
 
 \begin{thebibliography}{9}
 
+\bibitem{sequential}
+	Clase Sequential - Documentación de Keras
+
+	\url{https://keras.io/api/models/sequential/}
+
+
+\bibitem{model}
+
+	Clase Model - Documentación de Keras
+
+	\url{https://keras.io/api/models/model/}
+
+\bibitem{conv2d}
+
+	Capa Conv2D - Documentación de Keras
+
+	\url{https://keras.io/api/layers/convolution_layers/convolution2d/}
+
+
+\bibitem{activation}
+
+	Capa Activation - Documentación de Keras
+
+	\url{https://keras.io/api/layers/core_layers/activation/}
+
+\bibitem{maxpooling2d}
+
+	Capa MaxPooling2D - Documentación de Keras
+
+	\url{https://keras.io/api/layers/pooling_layers/max_pooling2d/}
+
+\bibitem{dense}
+
+	Capa Dense - Documentación de Keras
+
+	\url{https://keras.io/api/layers/activations/}
+
+\bibitem{flatten}
+
+	Capa Flatten - Documentación de Keras
+
+	\url{https://keras.io/api/layers/reshaping_layers/flatten/}
 
 \end{thebibliography}
 
