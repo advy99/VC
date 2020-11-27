@@ -450,7 +450,7 @@ Vemos como con esta mejora ya conseguimos superar el 50\% de precisión pedido p
 
 Por último, la mejora final que he aplicado (fuera del ejercicio bonus) es la regularización con capas \texttt{Dropout}\cite{dropout}. Esta capa nos ayudará a prevenir el sobreajuste, estableciendo un porcentaje aleatorio dado de entradas a cero.
 
-Estas capas las utilizaré justo antes de una convolución o una capa totalmente conectada.
+Estas capas las utilizaré justo antes de una convolución o una capa totalmente conectada, y debido a que el tamaño de la red no es muy grande y tenemos unos datos asequibles, el porcentaje aleatorio utilizado será bajo, de entre $5$ y $10$ \%.
 
 El modelo final sería el siguiente:
 
