@@ -266,7 +266,7 @@ El modelo por lo tanto se trata de una variable de tipo \texttt{Sequential}, al 
 
 \subsection{Entrenamiento del modelo y valores de accuracy en los conjuntos de validación y test}
 
-Una vez hemos completado nuestro modelo, utilizando un optimizador (en este caso SGD\cite{sgd}), utilizaremos el método \texttt{compile}\cite{compile} para compilar el modelo. En este método utilizaremos tres parámetros:
+Una vez hemos completado nuestro modelo, utilizando un optimizador (en este caso SGD\cite{sgd}), utilizaremos el método \texttt{compile} para compilar el modelo. En este método utilizaremos tres parámetros:
 
 \begin{enumerate}
 	\item \texttt{loss}: Tipo de perdida del modelo, en nuestro caso \texttt{keras.losses.categorical\_crossentropy}, ya que trabajamos con un problema multiclase.
@@ -310,22 +310,172 @@ Debido a que las mejoras que he ido probando mejoraban poco a poco el modelo, ca
 
 \subsection{Normalización de datos}
 
-De cara a obtener un entrenamiento más sencillo y sólido, he utilizado la normalización de datos. Para aplicar esta normalización he utilizado la clase \texttt{ImageDataGenerator}\cite{imagedatagenerator}
+De cara a obtener un entrenamiento más sencillo y sólido, he utilizado la normalización de datos. Para aplicar esta normalización he utilizado la clase \texttt{ImageDataGenerator}\cite{imagedatagenerator}. Esta clase la utilizaremos a lo largo de todo el apartado ya que nos permite realizar varias de las mejoras propuestas.
 
+Con esta clase conseguiremos, dado una entrada de imágenes, obtener imágenes modificadas a partir de las originales, desde normalización de las imagenes, aumento de las imágenes con zoom, volteados, rotaciones, etc.
+
+En este apartado en concreto usaremos los parámetros \texttt{featurewise\_center}, que estableceremos a \texttt{True}, para hacer que la media de la entrada sea cero, y \texttt{featurewise\_std\_normalization} que también estará a \texttt{True}, para que la desviación típica sea de uno.
+
+De esta forma, declararemos estos generadores de imágenes y al entrenar el modelo, en lugar de utilizar el método \texttt{fit} usaremos el método \texttt{fit\_generator}, al que le podemos pasar una serie de imágenes generadas con el método \texttt{flow} de los generadores de imágenes.
+
+Otra cuestión importante de utilizar estos generadores de datos es que en su declaración debemos especificar el porcentaje a usar de validación, y al aplicar el método \texttt{fit\_generator} para referirnos al conjunto de entrenamiento usaremos el subconjunto de training con el parámetro \texttt{subset} de \texttt{flow}, y para referirnos al conjunto de validación usaremos \texttt{validation\_data} con el \texttt{subset} de \texttt{validation}.
+
+Por último, a la hora de probar el resultado con el conjunto de test, este conjunto tendrá su propio \texttt{ImageDataGenerator}, que normalizará las imágenes, pero no las separará dos conjuntos, uno de ellos para validación.
+
+
+Tras aplicar este cambio, los resultados son los siguientes:
+
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1-2-norm.png}
+ 		\caption{Perdida en el conjunto de entrenamiento y validación aplicando normalización de media 0 y varianza 1 a la entrada.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1-2-norm-2.png}
+ 		\caption{Valor de precisión en el conjunto de entrenamiento y validación aplicando normalización de media 0 y varianza 1 a la entrada.}
+\end{figure}
+
+
+
+En el conjunto de test conseguimos el siguiente valor de precisión:
+
+\begin{lstlisting}
+Accuracy en el conjunto test con normalización: 0.4524
+\end{lstlisting}
+
+Vemos como tanto en el conjunto de validación como en el conjunto de test supone una pequeña mejora.
 
 
 \subsection{Aumento de datos}
 
+Esta mejora trata de generar más variedad de imágenes del conjunto de entrenamiento dado. En concreto utilizaré el parámetro \texttt{horizontal\_flip} para que además de las imágenes que conformal el conjunto de entrenamiento entrene también con dichas imágenes volteadas de forma horizontal. También probé con \texttt{vertical\_flip}, sin embargo no daba buenos resultados ya que voltear verticalmente las imagenes no aporta gran información, ya que es raro encontrarse imágenes del reves, sin embargo es común encontrar imágenes y escenas simetricas horizontalmente.
 
+Otro de los posibles parámetros es \texttt{zoom\_range}, que genera nuevas imágenes a partir de aplicar zoom a las originales, sin embargo al ser demasiadas imagenes con las que entrenar y que no conseguia un buen ajuste de forma experimental, decidí descartarlo.
+
+Como nos comenta el guión de prácticas, es importante generar tres \texttt{ImageDataGenerator} distintos, uno para el conjunto de entrenamiento, otro para el conjunto de validación y otro para el conjunto de test. Esto se debe a que el conjunto de entrenamiento y validación tienen que conformarlo con cierto porcentaje concreto de imágenes, sin embargo no podemos utilizar el parámetro \texttt{subset} utilizado en la mejora anterior, ya que es importante que solo se valide con las imágenes originales, no con las generadas por el volteado. Los motivos de usar un \texttt{ImageDataGenerator} para el conjunto de test son las mismas que en el apartado anterior.
+
+Esta mejora también incluye la normalización de datos explicada en el apartado anterior.
+
+Los resultados son los siguientes:
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1-2-aumento.png}
+ 		\caption{Perdida en el conjunto de entrenamiento y validación aplicando normalización de media 0 y varianza 1 y aumento de datos a la entrada.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1-2-aumento-2.png}
+ 		\caption{Valor de precisión en el conjunto de entrenamiento y validación aplicando normalización de media 0 y varianza 1 y aumento de datos a la entrada.}
+\end{figure}
+
+
+
+En el conjunto de test conseguimos el siguiente valor de precisión:
+
+\begin{lstlisting}
+Accuracy en el conjunto test con normalizacion y aumento: 0.4764
+\end{lstlisting}
+
+En este caso también se mejora el modelo, acercandose al objetivo del 50\% de precisión.
 
 \subsection{Normalización con BatchNormalization}
+
+En esta mejora introduciremos nuevas capas de BatchNormalization\cite{batchnormalization} entre las capas de convolución y las capas de activación ReLu.
+
+Estas capas aplicarán una normalización a los datos que mantiene la media de los datos cercana a cero y la desviación típica cercana a uno. Por este motivo la aplicaremos despues de aplicar una convolución, ya que es la operación que modifica los valores de la entrada. De cara a que el comportamiento sea aún mejor utilizaremos el parámetro \texttt{renorm} de esta capa, ya que ayuda a la forma en la que se trabaja con los minibatch en la normalización\cite{renorm}.
+
+
+Con estas modificaciones el modelo quedaría de la siguiente forma:
+
+% Please add the following required packages to your document preamble:
+% \usepackage{graphicx}
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Número de capa} & \textbf{Tipo de capa} & \textbf{\begin{tabular}[c]{@{}c@{}}Tam. kernel \\ (para convoluciones)\end{tabular}} & \textbf{Tamaño de entrada/salida} & \textbf{\begin{tabular}[c]{@{}c@{}}Canales de entrada/salida \\ para convoluciones)\end{tabular}} \\ \hline
+1                       & Conv2D                & 5                                                                                    & 32 | 28                           & 3 | 6                                                                                             \\ \hline
+2                       & BatchNormalization    & -                                                                                    & 28 | 28                           & -                                                                                                 \\ \hline
+3                       & Relu                  & -                                                                                    & 28 | 28                           & -                                                                                                 \\ \hline
+4                       & MaxPooling2D          & 2                                                                                    & 28 | 14                           & -                                                                                                 \\ \hline
+5                       & Conv2D                & 5                                                                                    & 14 | 10                           & 6 | 16                                                                                            \\ \hline
+6                       & BatchNormalization    & -                                                                                    & 10 | 10                           & -                                                                                                 \\ \hline
+7                       & Relu                  & -                                                                                    & 10 | 10                           & -                                                                                                 \\ \hline
+8                       & MaxPooling2D          & 2                                                                                    & 10 | 5                            & -                                                                                                 \\ \hline
+9                       & Linear                & -                                                                                    & 400 | 50                          & -                                                                                                 \\ \hline
+10                      & BatchNormalization    & -                                                                                    & 50 | 50                           & -                                                                                                 \\ \hline
+11                      & Relu                  & -                                                                                    & 50 | 50                           & -                                                                                                 \\ \hline
+12                      & Linear                & -                                                                                    & 50 | 25                           & -                                                                                                 \\ \hline
+\end{tabular}%
+}
+\end{table}
+
+
+Y los resultados obtenidos son los siguientes:
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1-2-batch.png}
+ 		\caption{Perdida en el conjunto de entrenamiento y validación aplicando normalización de media 0 y varianza 1, aumento de datos y BatchNormalization.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1-2-batch-2.png}
+ 		\caption{Valor de precisión en el conjunto de entrenamiento y validación aplicando normalización de media 0 y varianza 1, aumento de datos y BatchNormalization.}
+\end{figure}
+
+
+
+En el conjunto de test conseguimos el siguiente valor de precisión:
+
+\begin{lstlisting}
+Accuracy en el conjunto test con normalizacion, aumento y batch normalization: 0.5064
+\end{lstlisting}
+
+Vemos como con esta mejora ya conseguimos superar el 50\% de precisión pedido por este ejercicio.
+
+
+
 
 
 \subsection{Regularización con Dropout}
 
+Por último, la mejora final que he aplicado (fuera del ejercicio bonus) es la regularización con capas \texttt{Dropout}\cite{dropout}. Esta capa nos ayudará a prevenir el sobreajuste, estableciendo un porcentaje aleatorio dado de entradas a cero.
+
+Estas capas las utilizaré justo antes de una convolución o una capa totalmente conectada.
+
+El modelo final sería el siguiente:
 
 
 
+Y los resultados obtenidos son los siguientes:
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1-2-dropout.png}
+ 		\caption{Perdida en el conjunto de entrenamiento y validación aplicando normalización de media 0 y varianza 1, aumento de datos, BatchNormalization y Dropout.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1-2-dropout-2.png}
+ 		\caption{Valor de precisión en el conjunto de entrenamiento y validación aplicando normalización de media 0 y varianza 1, aumento de datos, BatchNormalization y Dropout.}
+\end{figure}
+
+
+
+En el conjunto de test conseguimos el siguiente valor de precisión:
+
+\begin{lstlisting}
+\end{lstlisting}
 
 
 
@@ -401,6 +551,29 @@ De cara a obtener un entrenamiento más sencillo y sólido, he utilizado la norm
 	Clase ImageDataGenrator - Documentación de Keras
 
 	\url{https://keras.io/api/preprocessing/image/#imagedatagenerator-class}
+
+
+\bibitem{batchnormalization}
+
+	Capa BatchNormalization - Documentación de Keras
+
+	\url{https://keras.io/api/layers/normalization_layers/batch_normalization/}
+
+
+\bibitem{renorm}
+
+	Batch Renormalization: Towards Reducing Minibatch Dependence in Batch-Normalized Models - Sergey Ioffe, 2017
+
+	\url{https://arxiv.org/abs/1702.03275}
+
+
+\bibitem{dropout}
+
+	Capa Dropout - Documentación de Keras
+
+	\url{https://keras.io/api/layers/regularization_layers/dropout/}
+
+
 
 \end{thebibliography}
 
