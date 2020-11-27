@@ -205,7 +205,7 @@ El modelo inicial que implementaremos será el siguiente:
 \end{table}
 
 
-\subsubsection{Implementación del modelo: Hiperparámetros y función de cada capa}
+\subsection{Implementación del modelo: Hiperparámetros y función de cada capa}
 
 Para implementar el modelo utilizaremos la clase \texttt{Sequential} del módulo de Python \texttt{keras.models}, que nos permite agrupar una serie de capas de una red que finalmente conformarán un objeto de la clase \texttt{Model}.
 
@@ -220,7 +220,7 @@ En este modelo encontramos distintos tipos de capas:
 
 Tras esta simple introducción, pasaré a comentar detalladamente los hiperparámetros de cada capa utilizada:
 
-\textbf{Capa Conv2D:}
+\subsubsection{Capa Conv2D}
 
 En esta capa encontraremos distintos hiperparámetros, principalmente para controlar el tamaño de la máscara, la dimensionalidad de la salida, y otras especificaciones sobre las convoluciones 2D que vimos en la práctica 1. Los más interesantes son:
 
@@ -235,35 +235,73 @@ En esta capa encontraremos distintos hiperparámetros, principalmente para contr
 
 En nuestro caso, el valor de \texttt{filters} tendrá el valor de los canales de salida dados en el modelo, \texttt{kernel\_size} tendrá el valor dado en la tabla del modelo, \texttt{strides} utilizaremos el valor por defecto de cara a aplicar la operación a toda la entrada, \texttt{padding} tomará el valor de \texttt{valid} de cara a no aplicar este relleno, y por último, \texttt{activation} no lo utilizaré, ya que he preferido añadir una capa propia de activación. El resultado es equivalente, pero me resulta más cómodo para realizar una clara distinción de que se tratan de operaciones distintas.
 
-\textbf{Capa activación ReLu:}
+\subsubsection{Capa activación ReLu}
 
 Utilizaremos la capa \texttt{Activation} de Keras, que como único parámetro tiene el tipo de activación. En este caso, como nos pide el ejercicio, utilizaremos como función de activación \texttt{relu}. Esta cápa se encargará de decidir si una neurona es activada o no, calculando el peso de esta y teniendo en cuenta el sesgo que podría añadir. El objetivo de este tipo de capas son introducir no linearidad en el modelo.
 
-\textbf{Capa MaxPooling2D:}
+\subsubsection{Capa MaxPooling2D}
 
 Tiene como objetivo reducir la dimensionalidad de la entrada.
 
 Aunque comparte los parámetros de \texttt{strides} y \texttt{padding} con la capa Conv2D, en nuestro caso el parámetro que nos interesa será \texttt{pool\_size}, este parámetro indicará el factor de reducción de la entrada. De esta forma, como vemos en la tabla del modelo, al aplicar un factor de escala de dos, reduciremos el tamaño de la entrada a la mitad.
 
 
-\textbf{Capa Dense:}
+\subsubsection{Capa Dense}
 
 Esta capa se trata de una capa de neuronas totalmente conectadas. En esta operación simplemente utilizaremos el parámetro \texttt{units}, con el que indicaremos el número de neuronas de la capa. El tamaño de salida de esta capa coincidirá con el parámetro \texttt{units}.
 
 
-\textbf{Capa Flatten:}
+\subsubsection{Capa Flatten}
 
 
 Una observación es que vemos como justo antes de aplicar la capa \texttt{Dense} por primera vez en nuestro modelo, pasamos a tener una salida de tamaño cinco, y la entrada a esta capa será de cuatrocientos. Esto es debido a que utilizaremos una capa \texttt{Flatten}\cite{flatten} que reducirá la entrada como un vector 1D, de forma que la capa de tamaño cinco, al tener dieciséis canales, tendrá tamaño cuatrocientos.
 
 
-\textbf{Implementación del modelo:}
+\subsubsection{Implementación del modelo}
 
 El modelo por lo tanto se trata de una variable de tipo \texttt{Sequential}, al que con el método \texttt{add} añadiremos las distintas capas con los hiperparámetros dados. Se puede consultar más a fondo en el fichero de Python adjunto a este PDF.
 
 
+\subsection{Entrenamiento del modelo y valores de accuracy en los conjuntos de validación y test}
+
+Una vez hemos completado nuestro modelo, utilizando un optimizador (en este caso SGD\cite{sgd}), utilizaremos el método \texttt{compile}\cite{compile} para compilar el modelo. En este método utilizaremos tres parámetros:
+
+\begin{enumerate}
+	\item \texttt{loss}: Tipo de perdida del modelo, en nuestro caso \texttt{keras.losses.categorical\_crossentropy}, ya que trabajamos con un problema multiclase.
+	\item \texttt{optimizer}: Optimizador a utilizar, como he comentado, en nuestro caso \texttt{SGD}.
+	\item \texttt{metrics}: Métricas para medir el error del modelo. En nuestro caso \texttt{accuracy}.
+
+\end{enumerate}
+
+
+Una vez compilado el modelo, podemos entrenarlo con la función \texttt{fit}, que cuenta con distintos parámetros, la mayoría de ellos vistos en Aprendizaje Automático, como el número de épocas, el tamaño del batch a utilizar, y el porcentaje de validación del conjunto de entrenamiento. En nuestro caso, utilizaremos un valor de $0.1$ para el porcentaje de validación, como nos indica el enunciado, así como un tamaño de batch de 32, ya que es el valor por defecto y funciona bien.
+
+Tras esto, la evolución del entrenamiento del modelo es la siguiente:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1-1-1.png}
+ 		\caption{Perdida en el conjunto de entrenamiento y validación.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{1-1-2.png}
+ 		\caption{Valor de precisión en el conjunto de entrenamiento y validación.}
+\end{figure}
+
+Observamos como obtenemos un valor de precisión cercano al 42\% en el conjunto de validación, lo que nos lleva a pensar en un resultado mediocre del modelo.
+
+En el conjunto de test conseguimos un valor de precisión similar:
+
+\begin{lstlisting}
+Accuracy en el conjunto test: 0.438
+\end{lstlisting}
 
 \section{Apartado 2: Mejora del modelo BaseNet}
+
+Hemos visto que el resultado obtenido no es el mejor posible, por lo que en este apartado trataremos de mejorar el modelo. Como se nos comenta en el enunciado, con una buena combinación de capas podemos obtener que el valor de precisión se acerque al 50\%, por este motivo en este apartado aplicaré mejoras en el modelo hasta llegar a ese porcentaje, y las demás mejoras las dejaré para el ejercicio de bonus, que se nos pide seguir mejorando el modelo.
 
 \section{Apartado 3: Transferencia de modelos y ajuste fino con ResNet50 para la base de datos Caltech-UCSD}
 
@@ -302,6 +340,12 @@ El modelo por lo tanto se trata de una variable de tipo \texttt{Sequential}, al 
 
 	\url{https://keras.io/api/layers/core_layers/activation/}
 
+\bibitem{relu}
+
+	Capa ReLu - Documentación de Keras
+
+	\url{https://keras.io/api/layers/activation_layers/relu/}
+
 \bibitem{maxpooling2d}
 
 	Capa MaxPooling2D - Documentación de Keras
@@ -319,6 +363,13 @@ El modelo por lo tanto se trata de una variable de tipo \texttt{Sequential}, al 
 	Capa Flatten - Documentación de Keras
 
 	\url{https://keras.io/api/layers/reshaping_layers/flatten/}
+
+\bibitem{sgd}
+
+	Optimizador SGD - Documentación de Keras
+
+	\url{https://keras.io/api/optimizers/sgd/}
+
 
 \end{thebibliography}
 
