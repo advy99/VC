@@ -202,6 +202,7 @@ El modelo inicial que implementaremos será el siguiente:
 7                       & Linear                & -                                                                                    & 400 | 50                          & -                                                                                                 \\ \hline
 8                       & Relu                  & -                                                                                    & 50 | 50                           & -                                                                                                 \\ \hline
 9                       & Linear                & -                                                                                    & 50 | 25                           & -                                                                                                 \\ \hline
+10                      & Softmax               & -                                                                                    & 25 | 25                           & -                                                                                                 \\ \hline
 \end{tabular}%
 }
 \end{table}
@@ -218,6 +219,7 @@ En este modelo encontramos distintos tipos de capas:
 	\item Relu\cite{relu} : Capa que implementa la función de activación ReLu, vista en teoría.
 	\item MaxPooling2D\cite{maxpooling2d} : Implementa la operación de max pooling para datos 2D. Reduce la muestra del input en el valor máximo dado por \texttt{pool\_size} en cada eje.
 	\item Linear : Implementada utilizando la capa \texttt{Dense}\cite{dense} de Keras, se trata de una capa densa totalmente conectada.
+	\item Softmax\cite{softmax}: Capa para trasformar la salida en la probabilidad de que pertenezca de pertenecer a cada clase
 \end{itemize}
 
 Tras esta simple introducción, pasaré a comentar detalladamente los hiperparámetros de cada capa utilizada:
@@ -413,6 +415,7 @@ Con estas modificaciones el modelo quedaría de la siguiente forma:
 10                      & BatchNormalization    & -                                                                                    & 50 | 50                           & -                                                                                                 \\ \hline
 11                      & Relu                  & -                                                                                    & 50 | 50                           & -                                                                                                 \\ \hline
 12                      & Linear                & -                                                                                    & 50 | 25                           & -                                                                                                 \\ \hline
+13                      & Softmax               & -                                                                                    & 25 | 25                           & -                                                                                                 \\ \hline
 \end{tabular}%
 }
 \end{table}
@@ -454,7 +457,33 @@ Estas capas las utilizaré justo antes de una convolución o una capa totalmente
 
 El modelo final sería el siguiente:
 
-
+% Please add the following required packages to your document preamble:
+% \usepackage{graphicx}
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Número de capa} & \textbf{Tipo de capa} & \textbf{\begin{tabular}[c]{@{}c@{}}Tam. kernel \\ (para convoluciones)\end{tabular}} & \textbf{Tamaño de entrada/salida} & \textbf{\begin{tabular}[c]{@{}c@{}}Canales de entrada/salida \\ para convoluciones)\end{tabular}} \\ \hline
+1                       & Conv2D                & 5                                                                                    & 32 | 28                           & 3 | 6                                                                                             \\ \hline
+2                       & BatchNormalization    & -                                                                                    & 28 | 28                           & -                                                                                                 \\ \hline
+3                       & Relu                  & -                                                                                    & 28 | 28                           & -                                                                                                 \\ \hline
+4                       & MaxPooling2D          & 2                                                                                    & 28 | 14                           & -                                                                                                 \\ \hline
+5                       & Dropout               & -                                                                                    & 14 | 14                           & -                                                                                                 \\ \hline
+6                       & Conv2D                & 5                                                                                    & 14 | 10                           & 6 | 16                                                                                            \\ \hline
+7                       & BatchNormalization    & -                                                                                    & 10 | 10                           & -                                                                                                 \\ \hline
+8                       & Relu                  & -                                                                                    & 10 | 10                           & -                                                                                                 \\ \hline
+9                       & MaxPooling2D          & 2                                                                                    & 10 | 5                            & -                                                                                                 \\ \hline
+10                      & Dropout               & -                                                                                    & 10 | 5                            & -                                                                                                 \\ \hline
+11                      & Linear                & -                                                                                    & 400 | 50                          & -                                                                                                 \\ \hline
+12                      & BatchNormalization    & -                                                                                    & 50 | 50                           & -                                                                                                 \\ \hline
+13                      & Relu                  & -                                                                                    & 50 | 50                           & -                                                                                                 \\ \hline
+14                      & Dropout               & -                                                                                    & 50 | 50                           & -                                                                                                 \\ \hline
+15                      & Linear                & -                                                                                    & 50 | 25                           & -                                                                                                 \\ \hline
+16                      & Softmax               & -                                                                                    & 25 | 25                           & -                                                                                                 \\ \hline
+\end{tabular}%
+}
+\end{table}
 
 Y los resultados obtenidos son los siguientes:
 
@@ -483,11 +512,33 @@ En este caso vemos como mantiene el resultado, sin embargo en las gráficas vemo
 Aun así, se logra superar lo pedido en el ejercicio, ya que se nos decía que con una buena mejora conseguiríamos un modelo que se acerque al 50\% de precisión, y el modelo propuesta la supera.
 
 
+
 \newpage
+
+
+
+
+
 
 \section{Apartado 3: Transferencia de modelos y ajuste fino con ResNet50 para la base de datos Caltech-UCSD}
 
+
+
+
+
+
+
+
 \section{Bonus: Propuestas de mejora de BaseNet}
+
+
+
+
+
+
+
+
+
 
 
 \newpage
@@ -533,6 +584,12 @@ Aun así, se logra superar lo pedido en el ejercicio, ya que se nos decía que c
 	Capa MaxPooling2D - Documentación de Keras
 
 	\url{https://keras.io/api/layers/pooling_layers/max_pooling2d/}
+
+\bibitem{softmax}
+
+	Capa Softmax - Documentación de Keras
+
+	\url{https://keras.io/api/layers/activation_layers/softmax/}
 
 \bibitem{dense}
 
