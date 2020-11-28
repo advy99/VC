@@ -67,6 +67,8 @@ np.random.seed(SEED)
 import tensorflow as tf
 tf.random.set_seed(SEED)
 
+
+
 #########################################################################
 ################## FUNCIÓN PARA LEER LAS IMÁGENES #######################
 #########################################################################
@@ -176,6 +178,7 @@ def mostrarEvolucion(hist):
 # A completar
 
 # si se usa colab, cambiar a la ruta donde tenga las imagenes
+#RUTA_IMAGENES = "/content/drive/My Drive/VC_p2/imagenes"
 RUTA_IMAGENES = "imagenes"
 x_train, y_train, x_test, y_test = cargarDatos(RUTA_IMAGENES)
 
@@ -321,6 +324,8 @@ modelo = Model(inputs = modelo_resnet50.input, outputs = salida_resnet)
 modelo.compile(loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"])
 
 
+print(modelo.summary())
+
 
 # entrenamos con el modelo_resnet50 congelado, solo se entrenará la
 # segunda parte
@@ -345,6 +350,7 @@ modelo = Model(inputs = modelo_resnet50.input, outputs = salida_resnet)
 
 modelo.compile(loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"])
 
+print(modelo.summary())
 
 # entrenamos con el modelo_resnet50 congelado, solo se entrenará la
 # segunda parte
@@ -362,5 +368,6 @@ predicciones_fine = modelo.predict_generator(generador_datos_test.flow(x_test, b
 
 accuracy_fine = calcularAccuracy(y_test, predicciones_fine)
 print("Accuracy con fine tuning: {}".format(accuracy_fine))
+
 
 
