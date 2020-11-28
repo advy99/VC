@@ -453,7 +453,7 @@ Vemos como con esta mejora ya conseguimos superar el 50\% de precisión pedido p
 
 Por último, la mejora final que he aplicado (fuera del ejercicio bonus) es la regularización con capas \texttt{Dropout}\cite{dropout}. Esta capa nos ayudará a prevenir el sobreajuste, estableciendo un porcentaje aleatorio dado de entradas a cero.
 
-Estas capas las utilizaré justo antes de una convolución o una capa totalmente conectada, y debido a que el tamaño de la red no es muy grande y tenemos unos datos asequibles, el porcentaje aleatorio utilizado será bajo, de entre $5$ y $10$ \%.
+Estas capas las utilizaré justo antes de una convolución o una capa totalmente conectada, y debido a que el tamaño de la red no es muy grande y tenemos unos datos asequibles, el porcentaje aleatorio utilizado será bajo, de entre $5$ y $10$ \%. De forma empírica he comprobado que si utilizo valores más altos empeoran los resultados, debido a que la perdida de información es demasiado sustancial.
 
 El modelo final sería el siguiente:
 
@@ -522,16 +522,156 @@ Aun así, se logra superar lo pedido en el ejercicio, ya que se nos decía que c
 
 \section{Apartado 3: Transferencia de modelos y ajuste fino con ResNet50 para la base de datos Caltech-UCSD}
 
+Para este apartado utilizaremos los datos de Caltech-UCSD-CUB-200\cite{cub200}, que consta de 6033 imágenes de 200 especies de pájaros, por lo que tendremos 200 clases, 3000 imágenes en el conjunto de entrenamiento y 3033 en el conjunto de prueba, de nuevo utilizaremos el 10\% del conjunto de entrenamiento como validación.
+
+En lugar de crear un modelo desde cero, trabajaremos con una red neuronal convolucional profunda pre-entrenada con ImageNet y disponible en el módulo de Keras, ResNet50\cite{resnet50}.
+
+
+\subsection{Prueba de modificación de la red pre-entrenada sustitución de la última capa FC y la salida por una red propia}
+
+En este primer apartado se nos pide eliminar la salida y la última capa de ResNet50, y sustituirlas por una nuevas capas entrenadas, de forma que solo entrenemos las dos nuevas capas añadidas.
+
+Para realizar este apartado he utilizado el parámetro \texttt{include\_top} de ResNet50 en Keras, de forma que si esta a false, elimina las capas que nos pide el ejercicio. También estableceremos \texttt{pooling} a \texttt{avg}, ya que en el siguiente apartado nos pide comparar sin esta capa.
+
+También utilizaremos el atributo \texttt{trainable} del modelo pre-entrenado, lo estableceremos a falso, de forma que no se entrene la parte original.
+
+Declararemos un ImageDataGenerator con el parámetro \texttt{preprocessing\_function} con el valor de \texttt{preprocess\_input} de ResNet50, de forma que todas las imagenes de este generador de datos se les aplique las transformaciones de ResNet50.
+
+Tras esto, simplemente obtenemos las caracteristicas tanto para el conjunto de entrenamiento como para test, obtenidas de dicho modelo (sin las dos últimas capas) con el método \texttt{predict\_generator}.
+
+
+Declararemos un nuevo modelo con \texttt{Sequential} de únicamente dos capas \texttt{Dense}, es decir, FC, como se nos pide, en la que la primera capa tendrá la forma de las caracteristicas obtenidas por \texttt{predict\_generator} y la segunda capa tendrá una salida de tamaño 200 y una activación softmax para devolver la salida, como en el modelo BaseNet, pero en lugar de tener las 25 posibles clases en este problema tenemos 200.
+
+Tras realizar esto, entrenamos el modelo con las caracteristicas obtenidas de la red pre-entrenada, que nuestra red más pequeña tendrá de entrada. El resultado de este entrenamiento es el siguiente:
+
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{3-1-a-1.png}
+ 		\caption{Perdida en el conjunto de entrenamiento y validación entrenando unicamente las dos últimas capas propias.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{3-1-a-2.png}
+ 		\caption{Valor de precisión en el conjunto de entrenamiento y validación entrenando unicamente las dos últimas capas propias.}
+\end{figure}
+
+
+
+En el conjunto de test conseguimos el siguiente valor de precisión:
+
+\begin{lstlisting}
+El accuracy en test es de: 0.30201121002307946
+\end{lstlisting}
+
+
+
+
+\subsection{Eliminar las dos últimas capas, además de la capa AveragePooling, añadir nuevas capas para realizar pruebas}
+
+En este caso he procedido como en el caso anterior, solo que al obtener el modelo ResNet50 he establecido el parámetro \texttt{pooling} a \texttt{None} para que no añada la última capa de AveragePooling.
+
+Al nuevo modelo, en lugar de ser dos capas FC como el caso anterior, se trata de un \texttt{Dropout}, seguido de una capa \texttt{Conv2D}, y tras eso una capa \texttt{BatchNormalization} y una capa \texttt{Activation} de tipo ReLu. Finalmente he añadido una capa \texttt{GlobalAveragePooling} de cara a obtener la forma de la salida necesaria para la última capa FC, al igual que estaba en el modelo original, y he dado la salida con una capa FC con una activación softmax.
+
+En resumen, el eliminar la capa de AveragePooling nos ha permitido introducir más capas en el modelo.
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{3-1-b-1.png}
+ 		\caption{Perdida en el conjunto de entrenamiento y validación entrenando unicamente el nuevo modelo añadido.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{3-1-b-2.png}
+ 		\caption{Valor de precisión en el conjunto de entrenamiento y validación entrenando unicamente el nuevo modelo añadido.}
+\end{figure}
+
+
+
+En el conjunto de test conseguimos el siguiente valor de precisión:
+
+\begin{lstlisting}
+El accuracy en test para el apartado B es de: 0.43158588855918234
+\end{lstlisting}
+
+Vemos como en este caso mejoramos el resultado del apartado A, y es que como era de esperar, el añadir una convolución y ajustarla a los datos de entrada permite que la red se ajuste mejor a la red del apartado A, en la que solo ajustaba la capa de salida.
+
+
+\subsection{Ajuste fino de ResNet50}
+
+El ajuste fino\cite{finetuningkeras} se trata de, utilizando redes neuronales convolucionales profundas pre-entrenadas, fijar las capas de la red neuronal convolucional pre-entrenada, y entrenar únicamente las nuevas capas que todavía no están entrenadas, tras esto, desfijar las capas de la red pre-entrenada y entrenar toda la red completa (pre-entrenada y nuevas capas añadidas). Esto nos mejorará los resultados, ya que permite entrenar las capas nuevas de la red, y cuando estas ya estén entrenadas, entrenar todo el conjunto, de forma que las nuevas capas no afecten de forma negativa a la red pre-entrenada, al todavía no estar preparadas y con unos pesos adecuados.
+
+Para desarrollar he consultado varios artículos\cite{finetuningkeras}\cite{finetuning}. He realizado los pasos anteriores, pero en lugar de dar como entrada a la nueva red las caracteristicas obtenidas con ResNet50, he creado la nueva red añadiendo capas a la red de ResNet50, gracias al atributo \texttt{output} de la clase \texttt{Model}. Cabe destacar que antes de hacer esto he fijado las capas de la ResNet50 para que no sean entrenables.
+
+Con todas esas capas, he creado el modelo y lo he entrenado, una vez está entrenado, se han vuelto a hacer entrenables las capas de ResNet50 y recompilado el modelo con las nuevas capas y sus pesos entrenados, de forma que se ha entrenado todo el conjunto de la red.
+
+El resultado entrenando solo las nuevas capas es el siguiente:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{3-2-antes-1.png}
+ 		\caption{Perdida en el conjunto de entrenamiento y validación entrenando unicamente el nuevo modelo añadido.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{3-2-antes-2.png}
+ 		\caption{Valor de precisión en el conjunto de entrenamiento y validación entrenando unicamente el nuevo modelo añadido.}
+\end{figure}
+
+
+
+En el conjunto de test conseguimos el siguiente valor de precisión:
+
+\begin{lstlisting}
+Accuracy con fine tuning (antes de entrenar todo el modelo): 0.3033300362677217
+\end{lstlisting}
+
+
+Y tras hacer toda la red entrenable y reentrenarla, obtenemos el siguiente resultado:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{3-2-1.png}
+		\caption{Perdida en el conjunto de entrenamiento y validación entrenando todo el modelo (ResNet50 y capas añadidas).}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{3-2-2.png}
+		\caption{Valor de precisión en el conjunto de entrenamiento y validación entrenando todo el modelo (ResNet50 y capas añadidas).}
+\end{figure}
+
+
+
+En el conjunto de test conseguimos el siguiente valor de precisión:
+
+\begin{lstlisting}
+Accuracy con fine tuning: 0.4701615562149687
+\end{lstlisting}
+
+Vemos como la mejora es sustancial, obteniendo el mejor valor de todas las pruebas con ResNet50.
 
 
 
 
 
 
+
+
+
+
+\newpage
 
 \section{Bonus: Propuestas de mejora de BaseNet}
 
-
+De cara a realizar el bonus, tras buscar y estudiar el conjunto de datos sobre el que trabajamos\cite{cifar100bonus}, CIFAR100,
 
 
 
@@ -637,6 +777,38 @@ Aun así, se logra superar lo pedido en el ejercicio, ya que se nos decía que c
 	\url{https://keras.io/api/layers/regularization_layers/dropout/}
 
 
+\bibitem{cub200}
+
+	Caltech-UCSD Birds-200
+
+	\url{http://www.vision.caltech.edu/visipedia/CUB-200.html}
+
+\bibitem{resnet50}
+
+	ResNet50 - Documentación de Keras
+
+	\url{https://keras.io/api/applications/resnet/#resnet50-function}
+
+
+\bibitem{cifar100bonus}
+
+	Best Practices for Convolutional Neural NetworksApplied to Object Recognition in Images - Anderson de Andrade
+
+	\url{https://arxiv.org/pdf/1910.13029.pdf}
+
+
+\bibitem{finetuningkeras}
+
+	Fine Tuning y congelamiento de capas - Documentación de Keras
+
+	\url{https://keras.io/guides/transfer_learning/}
+
+
+\bibitem{finetuning}
+
+	Fine-tuning CNN Image Retrievalwith No Human Annotation - Filip Radenovi, Giorgos Tolias, Ondˇrej Chum
+
+	\url{https://arxiv.org/pdf/1711.02512.pdf}
 
 \end{thebibliography}
 
