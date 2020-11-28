@@ -430,11 +430,10 @@ print("Accuracy en el conjunto test con normalizacion, aumento, batch normalizat
 
 input("------------- Pulsa cualquier tecla para continuar -------------------")
 
-print("Ejercicio Bonus: ELU, Adam como optimizador, reorganización BatchNormalization, nuevo modelo")
+print("Ejercicio Bonus: ELU, Adam como optimizador, nuevo modelo")
 
 # forma de las imagenes, como nos dice el guion
 forma_entrada = (32, 32, 3)
-
 
 modelo_bonus = Sequential()
 modelo_bonus.add( Conv2D(32, kernel_size=(3, 3), input_shape=forma_entrada))
@@ -450,7 +449,6 @@ modelo_bonus.add( Activation("elu") )
 modelo_bonus.add( BatchNormalization(renorm = True) )
 modelo_bonus.add( MaxPooling2D(pool_size=(2, 2)))
 modelo_bonus.add( Flatten())
-modelo_bonus.add( Dense(512, activation='elu'))
 modelo_bonus.add( Dense(256, activation='elu'))
 modelo_bonus.add( Dense(128, activation='elu'))
 modelo_bonus.add( Dense(25, activation='softmax'))
@@ -467,6 +465,8 @@ optimizador = Adam()
 
 # es multiclase, luego usamos categorical_crossentropy como perdida
 modelo_bonus.compile( loss = keras.losses.categorical_crossentropy, optimizer = optimizador, metrics = ["accuracy"] )
+
+print(modelo_bonus.summary())
 
 generador_image_data_bonus = ImageDataGenerator(featurewise_center = True,
                                                   featurewise_std_normalization = True,
