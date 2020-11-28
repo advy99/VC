@@ -656,10 +656,7 @@ En el conjunto de test conseguimos el siguiente valor de precisión:
 Accuracy con fine tuning: 0.4701615562149687
 \end{lstlisting}
 
-Vemos como la mejora es sustancial, obteniendo el mejor valor de todas las pruebas con ResNet50.
-
-
-
+Vemos como la mejora es sustancial, obteniendo el mejor valor de todas las pruebas con ResNet50, como nos confirmaban las distintas fuentes utilizadas.
 
 
 
@@ -671,12 +668,40 @@ Vemos como la mejora es sustancial, obteniendo el mejor valor de todas las prueb
 
 \section{Bonus: Propuestas de mejora de BaseNet}
 
-De cara a realizar el bonus, tras buscar y estudiar el conjunto de datos sobre el que trabajamos\cite{cifar100bonus}, CIFAR100,
+De cara a realizar el bonus, tras buscar y estudiar el conjunto de datos sobre el que trabajamos\cite{cifar100bonus}, CIFAR100, las mejoras propuestas son las siguientes:
+
+\begin{enumerate}
+	\item Uso de activaciones Elu en lugar de ReLu: Con el uso de activaciones ELU en lugar de ReLu, si el valor es menor cero usaremos un valor pequeño negativo, en lugar de anular dicho valor, de forma que sigue aportortando algo a la red, aunque sea pequeño. Se usa un valor reducido en caso de que afecte negativamente a la red, pero permite que valores que si mejorarían la red se utilicen.
+	\item Adam\cite{adam} como optimizador: Aunque hemos conseguido buenos resultados con SGD, de forma empírica he comprobado que utilizar este optimizador mejora el resultado.
+	\item Uso de máscaras pequeñas en las convoluciones 2D\cite{convksize}.
+	\item Cambiado disposición del modelo: Tras buscar referencias y bibliografía\cite{cifar100bonus}, he encontrado que una buena forma de conseguir buenos resultados en reconocimiento de imágenes es que en la red neuronal se vayan aplicando capas de convoluciones 2D con mayor dimensionalidad de salida (en nuestro caso, con sus respectivas activaciones ELU y capas de BatchNormalization), y a su vez se van intercalando capas de MaxPooling para reducir el tamaño de la entrada y manteniendo los valores altos. Finalmente, se aplanará utilizando la capa Flatten, y a partir de ahí aplicaremos capas FC, tantas como convoluciones se hayan realizado.
+\end{enumerate}
 
 
 
 
 
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{bonus.png}
+		\caption{Perdida en el conjunto de entrenamiento y validación con las nuevas mejoras.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+		\includegraphics[width=\textwidth]{bonus-1.png}
+		\caption{Valor de precisión en el conjunto de entrenamiento y validación con las nuevas mejoras.}
+\end{figure}
+
+
+
+En el conjunto de test conseguimos el siguiente valor de precisión:
+
+\begin{lstlisting}
+Accuracy en el conjunto test con normalizacion, aumento, batch normalization, elu, optimizador Adam y nuevo modelo: 0.6008
+\end{lstlisting}
+
+Vemos que conseguimos una mejora sustancial del 10\% del modelo tras todas las mejoras del apartado 2. Como vemos, en este caso ha sido crucial las operaciones de convoluciones seguidas de operaciones de pooling, y no he podido seguir la misma dinámica parra hacer la red más profunda debido a que el tamaño de la entrada no lo permitia y con la operación \texttt{UpSampling2D} no me ha ofrecido buenos resultados, sin embargo con imágenes de mayor tamaño se podría aumentar la profundidad de la red y mejorando su rendimiento.
 
 
 
@@ -809,6 +834,20 @@ De cara a realizar el bonus, tras buscar y estudiar el conjunto de datos sobre e
 	Fine-tuning CNN Image Retrievalwith No Human Annotation - Filip Radenovi, Giorgos Tolias, Ondˇrej Chum
 
 	\url{https://arxiv.org/pdf/1711.02512.pdf}
+
+
+\bibitem{adam}
+
+	Optimizador Adam - Documentación de Keras
+
+	\url{https://keras.io/api/optimizers/adam/}
+
+
+\bibitem{convksize}
+
+	Very Deep Convolutional Networks for Large-Scale Image Recognition - Karen Simonyan \& Andrew Zisserman
+
+	\url{https://arxiv.org/pdf/1409.1556.pdf}
 
 \end{thebibliography}
 
