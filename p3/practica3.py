@@ -151,7 +151,9 @@ def aplicar_convolucion(imagen, k_x, k_y):
 
     return img_conv_final
 
-def puntos_harris(imagen, tam_bloque):
+
+
+def puntos_harris(imagen, tam_bloque, tam_ventana, sigma_p_gauss, umbral_harris, ksize):
 
     piramide_gauss = piramide_gaussiana_cv(imagen, 3)
 
