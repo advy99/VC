@@ -264,6 +264,26 @@ def puntos_interes(imagen, tam_bloque, k_size):
     return puntos_interes
 
 
+def orientacion_gradiente(grad_x, grad_y):
+
+    vectores_u = no.concatenate([ grad_x.reshape(-1, 1), grad_y.reshape(-1,1) ], axis = 1)
+    normas_vectores_u = np.linalg.norm(u, axis = 1)
+
+    sin_cos_vectores_u = u / normas_vectores_u.reshape(-1, 1)
+    cosenos = sin_cos_vectores_u[:, 0]
+    senos = sin_cos_vectores_u[:, 1]
+
+    orientacion = np.divide(senos, cosenos, out = np.zeros(senos.shape), where = cosenos != 0.0)
+
+    radianes = np.arctan(orientacion)
+
+    grados = np.degrees(radianes)
+
+    grados[cosenos < 0.0] += 180
+    grados[grados < 0.0] += 360
+
+    return grados
+
 def puntos_harris(imagen, tam_bloque, tam_ventana, sigma_p_gauss, umbral_harris, ksize):
 
     piramide_gauss = piramide_gaussiana_cv(imagen, 3)
