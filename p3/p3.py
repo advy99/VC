@@ -248,6 +248,22 @@ def supresion_no_maximos(imagen, tam_bloque):
     return resultado
 
 
+def puntos_interes(imagen, tam_bloque, k_size):
+
+    val_eigen = cv.cornerEigenValsAndVecs(imagen, tam_bloque, k_size)
+
+    # nos quedamos con los valores singulares
+    val_eigen = val_eigen[:, :, :2]
+
+    producto = np.prod(val_eigen, axis = 2)
+    suma = np.sum(val_eigen, axis = 2)
+
+    # hacemos la division de los productos y la suma, y la salida será una matriz de ceros a excepción de donde la suma sera 0, para no dividir por 0
+    puntos_interes = np.divide(productos, suma, out = np.zeros(imagen.shape), where = suma != 0.0)
+
+    return puntos_interes
+
+
 def puntos_harris(imagen, tam_bloque, tam_ventana, sigma_p_gauss, umbral_harris, ksize):
 
     piramide_gauss = piramide_gaussiana_cv(imagen, 3)
