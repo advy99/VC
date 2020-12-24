@@ -220,6 +220,34 @@ def aplicar_convolucion(imagen, k_x, k_y):
     return img_conv_final
 
 
+def supresion_no_maximos(imagen, tam_bloque):
+
+    # el resultado será una imagen en blanco
+    resultado = np.zeros(imagen.shape);
+
+    # calculamos el rango a mirar, es la mitad ya que iremos de [-rango, rango]
+    rango = tam_bloque // 2
+
+    # para los indices de la imagen
+    for i, j in np.ndindex(imagen.shape):
+
+        # tenemos en cuenta los bordes
+        tope_inf_x = max(i - rango, 0)
+        tope_sup_x = i + rango + 1
+
+        tope_inf_y = max( j - rango, 0 )
+        tope_sup_y = j + rango + 1
+
+        # calculamos la ventana del rango actual
+        ventana = imagen[tope_inf_x:tope_sup_x, tope_inf_y:tope_sup_y]
+
+        # si el actual es un maximo, lo guardamos en la imagen
+        if np.max(ventana) == imagen[i, j]:
+            resultado[i, j] = imagen[i, j]
+
+    return resultado
+
+
 def puntos_harris(imagen, tam_bloque, tam_ventana, sigma_p_gauss, umbral_harris, ksize):
 
     piramide_gauss = piramide_gaussiana_cv(imagen, 3)
