@@ -141,6 +141,74 @@ def piramide_gaussiana_cv(imagen, niveles=3, tipo_borde=cv.BORDER_REPLICATE):
     return solucion
 
 
+
+def funcion_gaussiana(x, sigma):
+    """
+    Evaluar la función gausiana en un punto concreto x con un sigma dado
+
+    """
+
+    return math.exp(- (x**2) / (2 * sigma**2) )
+
+def derivada_f_gaussiana(x, sigma):
+    """
+    Primera derivada de la función gaussiana en un x concreto con un sigma dado
+    """
+
+    return ( - (math.exp(- (x**2)/(2 * sigma**2)  ) * x ) / (sigma**2) )
+
+def segunda_derivada_f_gaussiana(x, sigma):
+    """
+    Segunda derivada de la función gaussiana en un x concreto con un sigma dado
+    """
+
+    return (- ( (-x**2 + sigma**2) / ( math.exp((x**2) / (2*sigma**2)) * sigma**4 ) ) )
+
+
+
+def kernel_gaussiano_1d(sigma=None, func=funcion_gaussiana, tam_mascara=None):
+    """
+    Función para crear un kernel gaussiano 1D
+    """
+
+    # nos tienen que dar un sigma o un tamaño de mascara
+    parametros_correctos = tam_mascara != None or sigma != None
+
+    # si nos dan un tamaño de mascara, calculamos un sigma
+    if tam_mascara != None:
+        sigma = (tam_mascara - 1) / 6
+    elif sigma != None:
+        # usaremos un intervalo de  para obtener el kernel
+        tam_mascara = 2 * 3 * sigma + 1
+    else:
+        print("ERROR: Debes aportar un sigma o un tamaño de máscara")
+
+    # inicializamos kernels vacios
+    kernel = []
+    kernel_normalizado = []
+
+    # si han ejecutado la funcion de forma correcta
+    if parametros_correctos:
+
+        mitad_intervalo = np.floor(tam_mascara/2)
+        mitad_intervalo = int(mitad_intervalo)
+
+        # usamos la mitad ya que si tam_mascara vale x, en realidad vamos desde
+        # -x/2 .. x/2, teniendo el total un tamaño de x
+        for x in range(-mitad_intervalo, mitad_intervalo + 1):
+            kernel.append( func(x, sigma) )
+
+        kernel_normalizado = kernel
+
+        # si es la funcion gaussiana normalizamos, si es alguna de sus derivadas
+        # no tenemos que normalizar
+        if func == funcion_gaussiana:
+            kernel_normalizado = kernel_normalizado / np.sum(kernel)
+
+    return kernel_normalizado
+
+
+
 def aplicar_convolucion(imagen, k_x, k_y):
 
     k_x_invertido = np.flip(k_x)
@@ -150,7 +218,6 @@ def aplicar_convolucion(imagen, k_x, k_y):
     img_conv_final = cv.filter2D(imagen, -1, k_y_invertido)
 
     return img_conv_final
-
 
 
 def puntos_harris(imagen, tam_bloque, tam_ventana, sigma_p_gauss, umbral_harris, ksize):
