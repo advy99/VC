@@ -215,7 +215,7 @@ def aplicar_convolucion(imagen, k_x, k_y):
     k_y_invertido = np.flip(k_y)
 
     img_conv_c = cv.filter2D(imagen, -1, k_x_invertido)
-    img_conv_final = cv.filter2D(imagen, -1, k_y_invertido)
+    img_conv_final = cv.filter2D(img_conv_c, -1, k_y_invertido)
 
     return img_conv_final
 
