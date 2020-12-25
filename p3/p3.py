@@ -247,6 +247,26 @@ def supresion_no_maximos(imagen, tam_bloque):
 
     return resultado
 
+def piramide_derivada_gaussiana(imagen, k_size, tam_piramide, sigma):
+
+    kernel = kernel_gaussiano_1d(sigma)
+    img_alisada = aplicar_convolucion(imagen, kernel, kernel)
+
+    mascara_x_kx, mascara_y_kx = cv.getDerivKernels(1, 0, k_size, normalize = True)
+    mascara_x_ky, mascara_y_ky = cv.getDerivKernels(0, 1, k_size, normalize = True)
+
+    img_dx = aplicar_convolucion(img_alisada, k_size, mascara_x_kx, mascara_y_kx)
+    img_dy = aplicar_convolucion(img_alisada, k_size, mascara_x_ky, mascara_y_ky)
+
+    piramide_dx = [img_dx]
+    pidamide_dy = [img_dy]
+
+    for i in range(1, tam_piramide):
+        piramide_dx.append(cv.pyrDown(piramide_dx[i-1]))
+        piramide_dy.append(cv.pyrDown(piramide_dy[i-1]))
+
+    return piramide_dx, piramide_dy
+
 
 def puntos_interes(imagen, tam_bloque, k_size):
 
@@ -284,11 +304,58 @@ def orientacion_gradiente(grad_x, grad_y):
 
     return grados
 
-def puntos_harris(imagen, tam_bloque, tam_ventana, sigma_p_gauss, umbral_harris, ksize):
+def puntos_harris(imagen, tam_bloque, tam_ventana, num_escalas, sigma_p_gauss, umbral_harris, ksize):
 
-    piramide_gauss = piramide_gaussiana_cv(imagen, 3)
+    piramide_gauss = piramide_gaussiana_cv(imagen, num_escalas)
+
+    sigma = 4.5
+
+    piramide_derivada_x, piramide_derivada_y = piramide_derivada_gaussiana(imagen, ksize, num_escalas, sigma)
+
+    puntos_harris = []
+    puntos_harris_corregidos = []
+
+    for i in range(num_escalas):
+
+        puntos_interes = puntos_interes(piramide_gauss[i], tam_bloque, ksize)
+
+        # ponemos a 0 los puntos que no cumplen con el umbral
+        puntos_interes[puntos_interes < umbral_harris] = 0.0
+
+        puntos_a_usar = np.where(puntos_interes > 0.0)
+
+        derivadas_no_eliminados_x = piramide_derivada_x[i][puntos_a_usar]
+        derivadas_no_eliminados_y = piramide_derivada_y[i][puntos_a_usar]
+
+        escala_puntos = (i + 1) * tam_bloque
+
+        orientacion_puntos = orientacion_gradiente( derivadas_no_eliminados_x, derivadas_no_eliminados_y )
+
+        puntos_escala = []
+
+        for y, x, o in zip(*puntos_a_usar, orientacion_puntos):
+            puntos_escala.append(cv.KeyPoint(x*2**i, y*2**i, escala_puntos, o))
 
 
+        puntos_x = puntos_a_usar[0].reshape(-1, 1)
+        puntos_y = puntos_a_usar[1].reshape(-1, 1)
+
+        puntos = np.concatenate([puntos_x, puntos_y], axis = 1)
+
+        # paramos con 15 iteraciones o con epsilon < 0.01
+        criterio = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 15, 0.01)
+
+        puntos = cv.cornerSubPix(piramide_gauss[i], puntos.astype(np.float32), (3,3), (-1, -1), criterio)
+
+        puntos = np.round(puntos)
+        puntos = np.flip(puntos, axis = 1)
+        puntos *= 2**i
+
+
+        puntos_harris.append(puntos_escala)
+        puntos_harris_corregidos.append(puntos)
+
+    return puntos_harris, puntos_harris_corregidos
 
 
 """
