@@ -234,7 +234,7 @@ def supresion_no_maximos(imagen, tam_bloque):
     # calculamos el rango a mirar, es la mitad ya que iremos de [-rango, rango]
     rango = tam_bloque // 2
 
-    # para los indices de la imagen
+    # para los indices de laimagen
     for i, j in np.ndindex(imagen.shape):
 
         # tenemos en cuenta los bordes
@@ -325,10 +325,11 @@ def puntos_harris(imagen, tam_bloque, tam_ventana, num_escalas, sigma_p_gauss, u
 
         p_interes = puntos_interes(piramide_gauss[i], tam_bloque, ksize)
 
-        print(p_interes)
 
         # ponemos a 0 los puntos que no cumplen con el umbral
         p_interes[p_interes < umbral_harris] = 0.0
+
+        p_interes = supresion_no_maximos(p_interes, tam_ventana)
 
         puntos_a_usar = np.where(p_interes > 0.0)
 
@@ -383,9 +384,9 @@ def normaliza_imagen_255( imagen ):
     norm = norm * 255
 
     # Redondear los valores y convertirlos a uint8
-    trans_uint8 = np.round(norm).astype(np.uint8)
+    resultado = np.round(norm).astype(np.uint8)
 
-    return trans_uint8
+    return resultado
 
 
 
@@ -398,11 +399,8 @@ def dibujar_puntos_harris( imagen, puntos ):
         for punto in escala:
             todos_puntos.append(punto)
 
-    print("Total de puntos: ", len(todos_puntos))
 
     imagen = normaliza_imagen_255(imagen)
-
-    imagen = cv.cvtColor(imagen, cv.COLOR_BGR2RGB)
 
     img_con_puntos = np.empty(imagen.shape)
 
