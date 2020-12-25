@@ -2,10 +2,16 @@
 # -*- coding: utf-8 -*-
 
 
+import cv2 as cv
+import matplotlib.pyplot as plt
+import numpy as np
+import math
 
 def leeimagen(fichero, flag_color):
 
     imagen = cv.imread(fichero, flag_color)
+
+    imagen = imagen.astype(np.float32)
 
     return imagen
 
@@ -255,11 +261,11 @@ def piramide_derivada_gaussiana(imagen, k_size, tam_piramide, sigma):
     mascara_x_kx, mascara_y_kx = cv.getDerivKernels(1, 0, k_size, normalize = True)
     mascara_x_ky, mascara_y_ky = cv.getDerivKernels(0, 1, k_size, normalize = True)
 
-    img_dx = aplicar_convolucion(img_alisada, k_size, mascara_x_kx, mascara_y_kx)
-    img_dy = aplicar_convolucion(img_alisada, k_size, mascara_x_ky, mascara_y_ky)
+    img_dx = aplicar_convolucion(img_alisada, mascara_x_kx, mascara_y_kx)
+    img_dy = aplicar_convolucion(img_alisada, mascara_x_ky, mascara_y_ky)
 
     piramide_dx = [img_dx]
-    pidamide_dy = [img_dy]
+    piramide_dy = [img_dy]
 
     for i in range(1, tam_piramide):
         piramide_dx.append(cv.pyrDown(piramide_dx[i-1]))
@@ -279,17 +285,17 @@ def puntos_interes(imagen, tam_bloque, k_size):
     suma = np.sum(val_eigen, axis = 2)
 
     # hacemos la division de los productos y la suma, y la salida será una matriz de ceros a excepción de donde la suma sera 0, para no dividir por 0
-    puntos_interes = np.divide(productos, suma, out = np.zeros(imagen.shape), where = suma != 0.0)
+    puntos_interes = np.divide(producto, suma, out = np.zeros(imagen.shape), where = suma != 0.0)
 
     return puntos_interes
 
 
 def orientacion_gradiente(grad_x, grad_y):
 
-    vectores_u = no.concatenate([ grad_x.reshape(-1, 1), grad_y.reshape(-1,1) ], axis = 1)
-    normas_vectores_u = np.linalg.norm(u, axis = 1)
+    vectores_u = np.concatenate([ grad_x.reshape(-1, 1), grad_y.reshape(-1,1) ], axis = 1)
+    normas_vectores_u = np.linalg.norm(vectores_u, axis = 1)
 
-    sin_cos_vectores_u = u / normas_vectores_u.reshape(-1, 1)
+    sin_cos_vectores_u = vectores_u / normas_vectores_u.reshape(-1, 1)
     cosenos = sin_cos_vectores_u[:, 0]
     senos = sin_cos_vectores_u[:, 1]
 
@@ -317,12 +323,14 @@ def puntos_harris(imagen, tam_bloque, tam_ventana, num_escalas, sigma_p_gauss, u
 
     for i in range(num_escalas):
 
-        puntos_interes = puntos_interes(piramide_gauss[i], tam_bloque, ksize)
+        p_interes = puntos_interes(piramide_gauss[i], tam_bloque, ksize)
+
+        print(p_interes)
 
         # ponemos a 0 los puntos que no cumplen con el umbral
-        puntos_interes[puntos_interes < umbral_harris] = 0.0
+        p_interes[p_interes < umbral_harris] = 0.0
 
-        puntos_a_usar = np.where(puntos_interes > 0.0)
+        puntos_a_usar = np.where(p_interes > 0.0)
 
         derivadas_no_eliminados_x = piramide_derivada_x[i][puntos_a_usar]
         derivadas_no_eliminados_y = piramide_derivada_y[i][puntos_a_usar]
@@ -334,7 +342,7 @@ def puntos_harris(imagen, tam_bloque, tam_ventana, num_escalas, sigma_p_gauss, u
         puntos_escala = []
 
         for y, x, o in zip(*puntos_a_usar, orientacion_puntos):
-            puntos_escala.append(cv.KeyPoint(x*2**i, y*2**i, escala_puntos, o))
+            puntos_escala.append(cv.KeyPoint(float(x)*2**i, float(y)*2**i, escala_puntos, o))
 
 
         puntos_x = puntos_a_usar[0].reshape(-1, 1)
@@ -358,6 +366,51 @@ def puntos_harris(imagen, tam_bloque, tam_ventana, num_escalas, sigma_p_gauss, u
     return puntos_harris, puntos_harris_corregidos
 
 
+def normaliza_imagen_255( imagen ):
+
+    if imagen.ndim == 2:
+        min_val = np.min(imagen)
+        max_val = np.max(imagen)
+    else:
+        min_val = np.min(imagen, axis=(0, 1))
+        max_val = np.max(imagen, axis=(0, 1))
+
+
+    # Normalizar la imagen al rango [0, 1]
+    norm = (imagen - min_val) / (max_val - min_val)
+
+    # Multiplicar cada pixel por 255
+    norm = norm * 255
+
+    # Redondear los valores y convertirlos a uint8
+    trans_uint8 = np.round(norm).astype(np.uint8)
+
+    return trans_uint8
+
+
+
+def dibujar_puntos_harris( imagen, puntos ):
+
+    todos_puntos = []
+
+    # juntamos todos los puntos de las distintas escalas
+    for escala in puntos:
+        for punto in escala:
+            todos_puntos.append(punto)
+
+    print("Total de puntos: ", len(todos_puntos))
+
+    imagen = normaliza_imagen_255(imagen)
+
+    imagen = cv.cvtColor(imagen, cv.COLOR_BGR2RGB)
+
+    img_con_puntos = np.empty(imagen.shape)
+
+    img_con_puntos = cv.drawKeypoints(imagen, todos_puntos, img_con_puntos, flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    mostrar_imagen(img_con_puntos)
+
+
 """
 Apartado 1
 """
@@ -365,4 +418,9 @@ Apartado 1
 yosemite_1_bn = leeimagen("imagenes/Yosemite1.jpg", 0)
 yosemite_2_bn = leeimagen("imagenes/Yosemite2.jpg", 0)
 
+puntos, puntos_corregidos = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 10.0, ksize = 3)
+
+
+
+dibujar_puntos_harris(yosemite_1_bn, puntos)
 
