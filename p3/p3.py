@@ -448,4 +448,14 @@ def puntos_descriptores_AKAZE(imagen, umbral):
     return puntos_clave, descriptores
 
 
+def coincidencias_descriptores_fuerza_bruta(descriptores1, descriptores2):
+
+    emparejado = cv.BFMatcher_create(crossCheck = True)
+
+    coincidencias = emparejado.match(descriptores1, descriptores2)
+
+    return coincidencias
+
+
+
 
