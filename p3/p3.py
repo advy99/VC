@@ -416,9 +416,36 @@ Apartado 1
 yosemite_1_bn = leeimagen("imagenes/Yosemite1.jpg", 0)
 yosemite_1_color = leeimagen("imagenes/Yosemite1.jpg", 1)
 
+
 puntos, puntos_corregidos = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 10.0, ksize = 3)
 
 
 
 dibujar_puntos_harris(yosemite_1_color, puntos)
+
+
+puntos_u90, puntos_corregidos_u90 = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 90.0, ksize = 3)
+
+
+
+dibujar_puntos_harris(yosemite_1_color, puntos_u90)
+
+
+
+
+
+
+"""
+Apartado 2
+"""
+
+def puntos_descriptores_AKAZE(imagen, umbral):
+
+    akaze = cv.AKAZE_create(threshold = umbral)
+
+    puntos_clave, descriptores = akaze.detectAndCompute(imagen, None)
+
+    return puntos_clave, descriptores
+
+
 
