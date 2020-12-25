@@ -597,13 +597,13 @@ def panorama_imagenes(imagenes):
 
         for coincidencia in coincidencias:
             puntos_destino.append(puntos_interes_destino[coincidencia.queryIdx].pt)
-            puntos_fuente.append(puntos_interes_fuente[coincidencia.queryIdx].pt)
+            puntos_fuente.append(puntos_interes_fuente[coincidencia.trainIdx].pt)
 
         puntos_destino = np.array(puntos_destino, dtype = np.float32)
         puntos_fuente = np.array(puntos_fuente, dtype = np.float32)
 
 
-        homografia_cv = cv.findHomography(puntos_fuente, puntos_destino, cv.RANSAC, 5)
+        homografia_cv, _ = cv.findHomography(puntos_fuente, puntos_destino, cv.RANSAC, 5)
         copia_homografia = np.dot(copia_homografia, homografia_cv)
 
         copia_fuente = normaliza_imagen_255(fuente)
@@ -629,10 +629,12 @@ def panorama_imagenes(imagenes):
 
         for coincidencia in coincidencias:
             puntos_destino.append(puntos_interes_destino[coincidencia.queryIdx].pt)
-            puntos_fuente.append(puntos_interes_fuente[coincidencia.queryIdx].pt)
+            puntos_fuente.append(puntos_interes_fuente[coincidencia.trainIdx].pt)
 
+        puntos_destino = np.array(puntos_destino, dtype = np.float32)
+        puntos_fuente = np.array(puntos_fuente, dtype = np.float32)
 
-        homografia_cv = cv.findHomography(puntos_fuente, puntos_destino, cv.RANSAC, 5)
+        homografia_cv, _ = cv.findHomography(puntos_fuente, puntos_destino, cv.RANSAC, 5)
         copia_homografia = np.dot(copia_homografia, homografia_cv)
 
         copia_fuente = normaliza_imagen_255(fuente)
