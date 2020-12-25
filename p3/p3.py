@@ -406,7 +406,7 @@ def dibujar_puntos_harris( imagen, puntos ):
 
     img_con_puntos = cv.drawKeypoints(imagen, todos_puntos, img_con_puntos, flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
-    mostrar_imagen(img_con_puntos)
+    return img_con_puntos
 
 
 """
@@ -416,21 +416,24 @@ Apartado 1
 yosemite_1_bn = leeimagen("imagenes/Yosemite1.jpg", 0)
 yosemite_1_color = leeimagen("imagenes/Yosemite1.jpg", 1)
 
+yosemite_2_bn = leeimagen("imagenes/Yosemite2.jpg", 0)
+yosemite_2_color = leeimagen("imagenes/Yosemite2.jpg", 1)
 
 puntos, puntos_corregidos = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 10.0, ksize = 3)
 
 
 
-dibujar_puntos_harris(yosemite_1_color, puntos)
+imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos)
 
+mostrar_imagen(imagen_con_puntos)
 
 puntos_u90, puntos_corregidos_u90 = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 90.0, ksize = 3)
 
 
 
-dibujar_puntos_harris(yosemite_1_color, puntos_u90)
+imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos_u90)
 
-
+mostrar_imagen(imagen_con_puntos)
 
 
 
@@ -461,7 +464,7 @@ def coincidencias_descriptores_2nn(descriptores1, descriptores2):
 
     emparejador = cv.BFMatcher_create()
 
-    coincidencias = knn.knnMatch(descriptor1, descriptor2, k = 2)
+    coincidencias = emparejador.knnMatch(descriptores1, descriptores2, k = 2)
 
     return coincidencias
 
@@ -476,9 +479,48 @@ def coincidencias_descriptores_lowe_average_2nn(descriptores1, descriptores2):
     # usamos el criterio de lowe para el mejor coincidencia
     for coincidencia_x, coincidencia_y in coincidencias:
         if coincidencia_x.distance < 0.8 * coincidencia_y.distance:
-            coincidencias_lowe.append(coindicencia_x)
+            coincidencias_lowe.append(coincidencia_x)
 
     return coincidencias_lowe
+
+
+
+def dibujar_coincidencias(imagen1, imagen2, puntos_clave1, puntos_clave2, coincidencias, a_mostrar = 100):
+
+
+    imagen1 = normaliza_imagen_255(imagen1)
+    imagen2 = normaliza_imagen_255(imagen2)
+
+    # juntamos las dos imagenes
+    imagen_resultado = np.concatenate([imagen1, imagen2], axis=1)
+
+    coincidencias_aleatorias = np.random.choice(coincidencias, a_mostrar, replace = False)
+
+
+    imagen_resultado = cv.drawMatches(imagen1, puntos_clave1, imagen2, puntos_clave2, coincidencias_aleatorias, imagen_resultado, flags = cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+
+
+    return imagen_resultado
+
+
+
+
+puntos_yosemite1, desciptores_yosemite1 = puntos_descriptores_AKAZE(yosemite_1_bn, 0.1)
+puntos_yosemite2, desciptores_yosemite2 = puntos_descriptores_AKAZE(yosemite_2_bn, 0.1)
+
+
+coincidencias_fuerza_bruta = coincidencias_descriptores_fuerza_bruta(desciptores_yosemite1, desciptores_yosemite2)
+
+coincidencias_lowe = coincidencias_descriptores_lowe_average_2nn(desciptores_yosemite1, desciptores_yosemite2)
+
+resultado_fuerza_bruta = dibujar_coincidencias(yosemite_1_color, yosemite_2_color, puntos_yosemite1, puntos_yosemite2, coincidencias_fuerza_bruta)
+
+
+resultado_lowe = dibujar_coincidencias(yosemite_1_color, yosemite_2_color, puntos_yosemite1, puntos_yosemite2, coincidencias_lowe)
+
+mostrar_imagen(resultado_fuerza_bruta)
+
+mostrar_imagen(resultado_lowe)
 
 
 
