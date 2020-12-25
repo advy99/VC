@@ -450,12 +450,35 @@ def puntos_descriptores_AKAZE(imagen, umbral):
 
 def coincidencias_descriptores_fuerza_bruta(descriptores1, descriptores2):
 
-    emparejado = cv.BFMatcher_create(crossCheck = True)
+    emparejador = cv.BFMatcher_create(crossCheck = True)
 
-    coincidencias = emparejado.match(descriptores1, descriptores2)
+    coincidencias = emparejador.match(descriptores1, descriptores2)
 
     return coincidencias
 
+
+def coincidencias_descriptores_2nn(descriptores1, descriptores2):
+
+    emparejador = cv.BFMatcher_create()
+
+    coincidencias = knn.knnMatch(descriptor1, descriptor2, k = 2)
+
+    return coincidencias
+
+
+
+def coincidencias_descriptores_lowe_average_2nn(descriptores1, descriptores2):
+
+    coincidencias = coincidencias_descriptores_2nn(descriptores1, descriptores2)
+
+    coincidencias_lowe = []
+
+    # usamos el criterio de lowe para el mejor coincidencia
+    for coincidencia_x, coincidencia_y in coincidencias:
+        if coincidencia_x.distance < 0.8 * coincidencia_y.distance:
+            coincidencias_lowe.append(coindicencia_x)
+
+    return coincidencias_lowe
 
 
 
