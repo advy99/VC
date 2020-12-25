@@ -406,9 +406,15 @@ def normaliza_imagen_255( imagen ):
 def dibujar_puntos_harris( imagen, puntos ):
 
     todos_puntos = []
+    i = 0
+
+    print("\n")
 
     # juntamos todos los puntos de las distintas escalas
     for escala in puntos:
+        print("La escala ", i, " tiene ", len(escala), " puntos")
+        i += 1
+
         for punto in escala:
             todos_puntos.append(punto)
 
@@ -537,10 +543,30 @@ mostrar_imagen(resultado_lowe)
 
 
 
+"""
+Apartado 3 y 4
+"""
 
-"""
-Apartado 3
-"""
+
+def panorama_imagenes(imagenes):
+
+    # se supone que estan ordenadas de derecha a izquierda
+
+    centro = len(imagenes) // 2
+
+
+    """
+    TODO: Crear imagen donde esta el resultado - tamaño por parámetro??
+    """
+
+
+    # parte derecha del panorama
+    for i in range ( centro, len(imagenes) - 1 ):
+        # TODO
+
+    # parte izquierda del panorama
+    for i in range(centro, 0, -1):
+        # TODO
 
 
 
