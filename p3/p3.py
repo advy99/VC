@@ -521,13 +521,13 @@ def dibujar_coincidencias(imagen1, imagen2, puntos_clave1, puntos_clave2, coinci
 
 
 
-puntos_yosemite1, desciptores_yosemite1 = puntos_descriptores_AKAZE(yosemite_1_bn, 0.1)
-puntos_yosemite2, desciptores_yosemite2 = puntos_descriptores_AKAZE(yosemite_2_bn, 0.1)
+puntos_yosemite1, descriptores_yosemite1 = puntos_descriptores_AKAZE(yosemite_1_bn, 0.1)
+puntos_yosemite2, descriptores_yosemite2 = puntos_descriptores_AKAZE(yosemite_2_bn, 0.1)
 
 
-coincidencias_fuerza_bruta = coincidencias_descriptores_fuerza_bruta(desciptores_yosemite1, desciptores_yosemite2)
+coincidencias_fuerza_bruta = coincidencias_descriptores_fuerza_bruta(descriptores_yosemite1, descriptores_yosemite2)
 
-coincidencias_lowe = coincidencias_descriptores_lowe_average_2nn(desciptores_yosemite1, desciptores_yosemite2)
+coincidencias_lowe = coincidencias_descriptores_lowe_average_2nn(descriptores_yosemite1, descriptores_yosemite2)
 
 resultado_fuerza_bruta = dibujar_coincidencias(yosemite_1_color, yosemite_2_color, puntos_yosemite1, puntos_yosemite2, coincidencias_fuerza_bruta)
 
@@ -547,6 +547,38 @@ mostrar_imagen(resultado_lowe)
 Apartado 3 y 4
 """
 
+def panorama_2_imagenes(imagen1, imagen2):
+
+    puntos1, descriptores1 = puntos_descriptores_AKAZE(imagen1, 0.1)
+    puntos2, descriptores2 = puntos_descriptores_AKAZE(imagen2, 0.1)
+
+    coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores1, descriptores2)
+
+
+    puntos_img1 = []
+    puntos_img2 = []
+
+    for m in coincidencias:
+        puntos_img1.append(puntos1[m.queryIdx].pt)
+        puntos_img2.append(puntos2[m.trainIdx].pt)
+
+    puntos_img1 = np.array(puntos_img1, dtype=np.float32)
+    puntos_img2 = np.array(puntos_img2, dtype=np.float32)
+
+    homografia = cv.findHomography(puntos_img2, puntos_img1, cv.RANSAC, 5)
+
+    resultado = np.zeros(1500, 900)
+    resultado = cv.cvtColor(resultado, cv.COLOR_BGR2RGB)
+
+    homografia_resultado = np.array( [[1, 0, ],
+                                      [0, 1, ],
+                                      [0, 0, ]], dtype = np.float64)
+
+
+
+
+
+
 
 def panorama_imagenes(imagenes):
 
@@ -563,21 +595,24 @@ def panorama_imagenes(imagenes):
     anchura = 0.0
 
     for i in imagenes:
-        anchura += i.shape[0]
-        altura += i.shape[1]
+        anchura += i.shape[1]
+        altura += i.shape[0]
 
-    anchura = int(np.ceil(anchura))
-    altura = int(np.ceil(altura ))
+    anchura = int(anchura)
+    altura = int(altura )
 
-    resultado = np.zeros( ( anchura, altura ) )
+    resultado = np.zeros( ( anchura, altura ) , dtype = np.uint8 )
+    resultado = cv.cvtColor(resultado, cv.COLOR_BGR2RGB)
 
     imagen_central = normaliza_imagen_255(imagenes[centro])
 
-    homografia = np.array( [[1, 0, imagen_central.shape[0]],
-                            [0, 1, imagen_central.shape[1]],
+    homografia = np.array( [[1, 0, 0],
+                            [0, 1, 0],
                             [0, 0, 1]], dtype = np.float64 )
 
-    cv.warpPerspective(centro, homografia, (anchura, altura), dst = resultado, borderMode = cv.BORDER_TRANSPARENT)
+    resultado = cv.warpPerspective(imagen_central, homografia, (anchura, altura), borderMode = cv.BORDER_TRANSPARENT)
+
+    mostrar_imagen(resultado)
 
     copia_homografia = np.copy(homografia)
 
@@ -608,7 +643,7 @@ def panorama_imagenes(imagenes):
 
         copia_fuente = normaliza_imagen_255(fuente)
 
-        cv.warpPerspective(copia_fuente, copia_homografia, (anchura, altura), dst = resultado, borderMode = cv.BORDER_TRANSPARENT)
+        resultado = cv.warpPerspective(copia_fuente, copia_homografia, (anchura, altura), borderMode = cv.BORDER_TRANSPARENT)
 
 
     copia_homografia = np.copy(homografia)
@@ -639,7 +674,7 @@ def panorama_imagenes(imagenes):
 
         copia_fuente = normaliza_imagen_255(fuente)
 
-        cv.warpPerspective(copia_fuente, copia_homografia, (anchura, altura), dst = resultado, borderMode = cv.BORDER_TRANSPARENT)
+        resultado = cv.warpPerspective(copia_fuente, copia_homografia, (anchura, altura), borderMode = cv.BORDER_TRANSPARENT)
 
 
     mostrar_imagen(resultado)
@@ -651,8 +686,8 @@ mosaico_etsiit += [f"imagenes/mosaico0{num}.jpg" for num in range(10, 12)]
 
 imagenes_etsiit = [leeimagen(imagen, 1) for imagen in mosaico_etsiit]
 
+img_yosemite = [yosemite_1_color]
 
 panorama_imagenes(imagenes_etsiit)
-
 
 
