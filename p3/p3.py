@@ -7,6 +7,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
+"""
+Funciones auxiliares (de otras prácticas, principalmente p1)
+"""
+
+
 def leeimagen(fichero, flag_color):
 
     imagen = cv.imread(fichero, flag_color)
@@ -226,6 +231,14 @@ def aplicar_convolucion(imagen, k_x, k_y):
     return img_conv_final
 
 
+
+
+"""
+Apartado 1
+"""
+
+
+
 def supresion_no_maximos(imagen, tam_bloque):
 
     # el resultado será una imagen en blanco
@@ -409,9 +422,6 @@ def dibujar_puntos_harris( imagen, puntos ):
     return img_con_puntos
 
 
-"""
-Apartado 1
-"""
 
 yosemite_1_bn = leeimagen("imagenes/Yosemite1.jpg", 0)
 yosemite_1_color = leeimagen("imagenes/Yosemite1.jpg", 1)
@@ -521,6 +531,16 @@ resultado_lowe = dibujar_coincidencias(yosemite_1_color, yosemite_2_color, punto
 mostrar_imagen(resultado_fuerza_bruta)
 
 mostrar_imagen(resultado_lowe)
+
+
+
+
+
+
+
+"""
+Apartado 3
+"""
 
 
 
