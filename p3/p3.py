@@ -559,14 +559,98 @@ def panorama_imagenes(imagenes):
     TODO: Crear imagen donde esta el resultado - tamaño por parámetro??
     """
 
+    altura = 0.0
+    anchura = 0.0
+
+    for i in imagenes:
+        anchura += i.shape[0]
+        altura += i.shape[1]
+
+    anchura = int(np.ceil(anchura))
+    altura = int(np.ceil(altura ))
+
+    resultado = np.zeros( ( anchura, altura ) )
+
+    imagen_central = normaliza_imagen_255(imagenes[centro])
+
+    homografia = np.array( [[1, 0, imagen_central.shape[0]],
+                            [0, 1, imagen_central.shape[1]],
+                            [0, 0, 1]], dtype = np.float64 )
+
+    cv.warpPerspective(centro, homografia, (anchura, altura), dst = resultado, borderMode = cv.BORDER_TRANSPARENT)
+
+    copia_homografia = np.copy(homografia)
 
     # parte derecha del panorama
     for i in range ( centro, len(imagenes) - 1 ):
-        # TODO
+
+        destino = imagenes[i]
+        fuente = imagenes[i + 1]
+
+        puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.1)
+        puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.1)
+
+        coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores_destino, descriptores_fuente)
+
+        puntos_destino = []
+        puntos_fuente = []
+
+        for coincidencia in coincidencias:
+            puntos_destino.append(puntos_interes_destino[coincidencia.queryIdx].pt)
+            puntos_fuente.append(puntos_interes_fuente[coincidencia.queryIdx].pt)
+
+        puntos_destino = np.array(puntos_destino, dtype = np.float32)
+        puntos_fuente = np.array(puntos_fuente, dtype = np.float32)
+
+
+        homografia_cv = cv.findHomography(puntos_fuente, puntos_destino, cv.RANSAC, 5)
+        copia_homografia = np.dot(copia_homografia, homografia_cv)
+
+        copia_fuente = normaliza_imagen_255(fuente)
+
+        cv.warpPerspective(copia_fuente, copia_homografia, (anchura, altura), dst = resultado, borderMode = cv.BORDER_TRANSPARENT)
+
+
+    copia_homografia = np.copy(homografia)
 
     # parte izquierda del panorama
     for i in range(centro, 0, -1):
         # TODO
+        destino = imagenes[i]
+        fuente = imagenes[i - 1]
+
+        puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.1)
+        puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.1)
+
+        coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores_destino, descriptores_fuente)
+
+        puntos_destino = []
+        puntos_fuente = []
+
+        for coincidencia in coincidencias:
+            puntos_destino.append(puntos_interes_destino[coincidencia.queryIdx].pt)
+            puntos_fuente.append(puntos_interes_fuente[coincidencia.queryIdx].pt)
+
+
+        homografia_cv = cv.findHomography(puntos_fuente, puntos_destino, cv.RANSAC, 5)
+        copia_homografia = np.dot(copia_homografia, homografia_cv)
+
+        copia_fuente = normaliza_imagen_255(fuente)
+
+        cv.warpPerspective(copia_fuente, copia_homografia, (anchura, altura), dst = resultado, borderMode = cv.BORDER_TRANSPARENT)
+
+
+    mostrar_imagen(resultado)
+
+
+
+mosaico_etsiit = [f"imagenes/mosaico00{num}.jpg" for num in range(2,10)]
+mosaico_etsiit += [f"imagenes/mosaico0{num}.jpg" for num in range(10, 12)]
+
+imagenes_etsiit = [leeimagen(imagen, 1) for imagen in mosaico_etsiit]
+
+
+panorama_imagenes(imagenes_etsiit)
 
 
 
