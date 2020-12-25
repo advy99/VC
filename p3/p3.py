@@ -580,39 +580,22 @@ def panorama_2_imagenes(imagen1, imagen2):
 
 
 
-def panorama_imagenes(imagenes):
+def panorama_imagenes(imagenes, tam_resul_x, tam_resul_y, desp_homo_x, desp_homo_y):
 
     # se supone que estan ordenadas de derecha a izquierda
 
     centro = len(imagenes) // 2
 
-
-    """
-    TODO: Crear imagen donde esta el resultado - tamaño por parámetro??
-    """
-
-    altura = 0.0
-    anchura = 0.0
-
-    for i in imagenes:
-        anchura += i.shape[1]
-        altura += i.shape[0]
-
-    anchura = int(anchura)
-    altura = int(altura )
-
-    resultado = np.zeros( ( anchura, altura ) , dtype = np.uint8 )
+    resultado = np.zeros( ( tam_resul_x, tam_resul_y ) , dtype = np.uint8 )
     resultado = cv.cvtColor(resultado, cv.COLOR_BGR2RGB)
 
     imagen_central = normaliza_imagen_255(imagenes[centro])
 
-    homografia = np.array( [[1, 0, 0],
-                            [0, 1, 0],
+    homografia = np.array( [[1, 0, desp_homo_x],
+                            [0, 1, desp_homo_y],
                             [0, 0, 1]], dtype = np.float64 )
 
-    resultado = cv.warpPerspective(imagen_central, homografia, (anchura, altura), borderMode = cv.BORDER_TRANSPARENT)
-
-    mostrar_imagen(resultado)
+    resultado = cv.warpPerspective(imagen_central, homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
 
     copia_homografia = np.copy(homografia)
 
@@ -643,14 +626,13 @@ def panorama_imagenes(imagenes):
 
         copia_fuente = normaliza_imagen_255(fuente)
 
-        resultado = cv.warpPerspective(copia_fuente, copia_homografia, (anchura, altura), borderMode = cv.BORDER_TRANSPARENT)
+        resultado = cv.warpPerspective(copia_fuente, copia_homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
 
 
     copia_homografia = np.copy(homografia)
 
     # parte izquierda del panorama
     for i in range(centro, 0, -1):
-        # TODO
         destino = imagenes[i]
         fuente = imagenes[i - 1]
 
@@ -674,7 +656,7 @@ def panorama_imagenes(imagenes):
 
         copia_fuente = normaliza_imagen_255(fuente)
 
-        resultado = cv.warpPerspective(copia_fuente, copia_homografia, (anchura, altura), borderMode = cv.BORDER_TRANSPARENT)
+        resultado = cv.warpPerspective(copia_fuente, copia_homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
 
 
     mostrar_imagen(resultado)
@@ -686,8 +668,8 @@ mosaico_etsiit += [f"imagenes/mosaico0{num}.jpg" for num in range(10, 12)]
 
 imagenes_etsiit = [leeimagen(imagen, 1) for imagen in mosaico_etsiit]
 
-img_yosemite = [yosemite_1_color]
+img_yosemite = [yosemite_1_color, yosemite_2_color]
 
-panorama_imagenes(imagenes_etsiit)
+panorama_imagenes(img_yosemite, 1000, 1000, 350, 100)
 
 
