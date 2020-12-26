@@ -14,6 +14,10 @@ Funciones auxiliares (de otras prácticas, principalmente p1)
 
 def leeimagen(fichero, flag_color):
 
+    """
+    Leer una imagen de un fichero (pasado como string), tambien se pasa un flag para leer a color o en B/N
+    """
+
     imagen = cv.imread(fichero, flag_color)
 
     imagen = imagen.astype(np.float32)
@@ -221,11 +225,18 @@ def kernel_gaussiano_1d(sigma=None, func=funcion_gaussiana, tam_mascara=None):
 
 
 def aplicar_convolucion(imagen, k_x, k_y):
+    """
+    Aplicar una convolucion a una imagen usando opencv
+    """
 
+    # invertimos los kernels, para que sea una convolucion y no una correlacion
     k_x_invertido = np.flip(k_x)
     k_y_invertido = np.flip(k_y)
 
+    # aplicamos el primero
     img_conv_c = cv.filter2D(imagen, -1, k_x_invertido)
+
+    # a la solucion aplicamos el segundo
     img_conv_final = cv.filter2D(img_conv_c, -1, k_y_invertido)
 
     return img_conv_final
