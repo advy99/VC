@@ -655,6 +655,9 @@ def panorama_imagenes(imagenes):
     return resultado
 
 
+def panorama_2_imagenes(imagen1, imagen2):
+    return panorama_imagenes([imagen1, imagen2])
+
 
 
 mosaico_etsiit = [f"imagenes/mosaico00{num}.jpg" for num in range(2,10)]
@@ -666,7 +669,9 @@ img_yosemite = [yosemite_1_color, yosemite_2_color]
 
 
 panorama_etsiit = panorama_imagenes(imagenes_etsiit)
+panorama_yosemite = panorama_2_imagenes(yosemite_1_color, yosemite_2_color)
 
+mostrar_imagen(panorama_yosemite)
 mostrar_imagen(panorama_etsiit)
 
 
