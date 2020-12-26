@@ -483,33 +483,37 @@ def dibujar_puntos_harris( imagen, puntos ):
             todos_puntos.append(punto)
 
 
+    # normalizamos la imagen
     imagen = normaliza_imagen_255(imagen)
 
     img_con_puntos = np.empty(imagen.shape)
 
+    # utilizamos drawKeyPoints para dibujar los puntos
+    # utilizamos el flag DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS para diferenciar las distintas escalas
     img_con_puntos = cv.drawKeypoints(imagen, todos_puntos, img_con_puntos, flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     return img_con_puntos
 
 
 
+# probamos el codigo
 yosemite_1_bn = leeimagen("imagenes/Yosemite1.jpg", 0)
 yosemite_1_color = leeimagen("imagenes/Yosemite1.jpg", 1)
 
 yosemite_2_bn = leeimagen("imagenes/Yosemite2.jpg", 0)
 yosemite_2_color = leeimagen("imagenes/Yosemite2.jpg", 1)
 
+# sacamos los puntos con la imagen en B/N y los pintamos en la imagen a color
+# ya que no podemos obtener los puntos de la imagen a color
 puntos, puntos_corregidos = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 10.0, ksize = 3)
-
-
 
 imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos)
 
 mostrar_imagen(imagen_con_puntos)
 
+
+# probamos un umbral más grande
 puntos_u90, puntos_corregidos_u90 = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 90.0, ksize = 3)
-
-
 
 imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos_u90)
 
