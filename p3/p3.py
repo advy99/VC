@@ -652,7 +652,8 @@ def panorama_imagenes(imagenes):
 
     resultado = resultado[ancho_min:ancho_max, alto_min:alto_max ]
 
-    mostrar_imagen(resultado)
+    return resultado
+
 
 
 
@@ -663,6 +664,9 @@ imagenes_etsiit = [leeimagen(imagen, 1) for imagen in mosaico_etsiit]
 
 img_yosemite = [yosemite_1_color, yosemite_2_color]
 
-panorama_imagenes(imagenes_etsiit)
+
+panorama_etsiit = panorama_imagenes(imagenes_etsiit)
+
+mostrar_imagen(panorama_etsiit)
 
 
