@@ -514,11 +514,65 @@ mostrar_imagen(imagen_con_puntos)
 
 
 # probamos un umbral más grande
-puntos_u90, puntos_corregidos_u90 = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 300.0, ksize = 3)
+puntos, puntos_corregidos = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 300.0, ksize = 3)
 
-imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos_u90)
+imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos)
 
 mostrar_imagen(imagen_con_puntos)
+
+# comparacion de puntos y puntos corregidos
+
+coordenadas_puntos = []
+coordenadas_puntos_corregidos = []
+
+for punto in puntos:
+    for k in punto:
+        coordenadas_puntos.append(list(k.pt))
+
+
+for punto in puntos_corregidos:
+    for k in punto:
+        coordenadas_puntos_corregidos.append(k)
+
+coordenadas_puntos = np.array(coordenadas_puntos)
+coordenadas_puntos_corregidos = np.array(coordenadas_puntos_corregidos)
+
+# nos quedamos con los puntos distintos
+distinto_x = coordenadas_puntos[:, 0] != coordenadas_puntos_corregidos[:, 0]
+distinto_y = coordenadas_puntos[:, 1] != coordenadas_puntos_corregidos[:, 1]
+
+distintos = distinto_x * distinto_y
+
+puntos_distintos = np.where(distintos == True)
+
+comparar_puntos = np.copy(yosemite_1_color)
+
+comparar_puntos = normaliza_imagen_255(comparar_puntos)
+
+# para tres puntos distintos
+for aleatorio in np.random.choice(puntos_distintos[0], 3, replace = False):
+
+    original = coordenadas_puntos[aleatorio]
+    corregido = coordenadas_puntos_corregidos[aleatorio]
+
+    original = original.astype(np.uint8)
+    corregido = corregido.astype(np.uint8)
+
+    comparar_puntos = cv.circle(comparar_puntos, tuple(original), 2, (255, 0, 0))
+    comparar_puntos = cv.circle(comparar_puntos, tuple(corregido), 2, (0, 0, 255))
+
+
+    px = original[0]
+    py = original[1]
+
+    rango = np.array([px - 4, px + 5, py - 4, py + 5])
+    rango = rango.astype(int)
+
+    rango[rango < 0] = 0
+
+    ventana = comparar_puntos[rango[2]:rango[3], rango[0]:rango[1]]
+
+    mostrar_imagen( ventana )
 
 
 """
