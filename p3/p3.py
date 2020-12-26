@@ -547,36 +547,6 @@ mostrar_imagen(resultado_lowe)
 Apartado 3 y 4
 """
 
-def panorama_2_imagenes(imagen1, imagen2):
-
-    puntos1, descriptores1 = puntos_descriptores_AKAZE(imagen1, 0.1)
-    puntos2, descriptores2 = puntos_descriptores_AKAZE(imagen2, 0.1)
-
-    coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores1, descriptores2)
-
-
-    puntos_img1 = []
-    puntos_img2 = []
-
-    for m in coincidencias:
-        puntos_img1.append(puntos1[m.queryIdx].pt)
-        puntos_img2.append(puntos2[m.trainIdx].pt)
-
-    puntos_img1 = np.array(puntos_img1, dtype=np.float32)
-    puntos_img2 = np.array(puntos_img2, dtype=np.float32)
-
-    homografia = cv.findHomography(puntos_img2, puntos_img1, cv.RANSAC, 5)
-
-    resultado = np.zeros(1500, 900)
-    resultado = cv.cvtColor(resultado, cv.COLOR_BGR2RGB)
-
-    homografia_resultado = np.array( [[1, 0, ],
-                                      [0, 1, ],
-                                      [0, 0, ]], dtype = np.float64)
-
-
-
-
 
 
 
