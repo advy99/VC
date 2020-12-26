@@ -495,6 +495,7 @@ def dibujar_puntos_harris( imagen, puntos ):
     return img_con_puntos
 
 
+np.random.seed(1)
 
 # probamos el codigo
 yosemite_1_bn = leeimagen("imagenes/Yosemite1.jpg", 0)
@@ -513,13 +514,11 @@ mostrar_imagen(imagen_con_puntos)
 
 
 # probamos un umbral más grande
-puntos_u90, puntos_corregidos_u90 = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 90.0, ksize = 3)
+puntos_u90, puntos_corregidos_u90 = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 300.0, ksize = 3)
 
 imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos_u90)
 
 mostrar_imagen(imagen_con_puntos)
-
-
 
 
 """
