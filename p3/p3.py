@@ -252,13 +252,17 @@ Apartado 1
 
 def supresion_no_maximos(imagen, tam_bloque):
 
+    """
+    Funcion para realizar la supresión de no maximos de una imagen
+    """
+
     # el resultado será una imagen en blanco
     resultado = np.zeros(imagen.shape);
 
     # calculamos el rango a mirar, es la mitad ya que iremos de [-rango, rango]
     rango = tam_bloque // 2
 
-    # para los indices de laimagen
+    # para los indices de la imagen
     for i, j in np.ndindex(imagen.shape):
 
         # tenemos en cuenta los bordes
@@ -279,15 +283,25 @@ def supresion_no_maximos(imagen, tam_bloque):
 
 def piramide_derivada_gaussiana(imagen, k_size, tam_piramide, sigma):
 
+    """
+    Pirámide con las derivadas de la gaussiana de la imagen. La usaremos
+    para conocer los gradientes de una imagen a distintas escalas
+    """
+
+    # alisamos la imagen
     kernel = kernel_gaussiano_1d(sigma)
     img_alisada = aplicar_convolucion(imagen, kernel, kernel)
 
+    # obtenemos los kernels para cada eje
     mascara_x_kx, mascara_y_kx = cv.getDerivKernels(1, 0, k_size, normalize = True)
     mascara_x_ky, mascara_y_ky = cv.getDerivKernels(0, 1, k_size, normalize = True)
 
+    # aplicamos las convoluciones
     img_dx = aplicar_convolucion(img_alisada, mascara_x_kx, mascara_y_kx)
     img_dy = aplicar_convolucion(img_alisada, mascara_x_ky, mascara_y_ky)
 
+
+    # construimos la piramide con el primer nivel con las derivadas
     piramide_dx = [img_dx]
     piramide_dy = [img_dy]
 
@@ -300,11 +314,17 @@ def piramide_derivada_gaussiana(imagen, k_size, tam_piramide, sigma):
 
 def puntos_interes(imagen, tam_bloque, k_size):
 
+    """
+    Funcion para obtener los puntos de interes de una imagen
+    """
+
+    # obtenemos los valores con opencv
     val_eigen = cv.cornerEigenValsAndVecs(imagen, tam_bloque, k_size)
 
     # nos quedamos con los valores singulares
     val_eigen = val_eigen[:, :, :2]
 
+    # calculamos el producto y la suma de los valores singulares
     producto = np.prod(val_eigen, axis = 2)
     suma = np.sum(val_eigen, axis = 2)
 
@@ -316,19 +336,31 @@ def puntos_interes(imagen, tam_bloque, k_size):
 
 def orientacion_gradiente(grad_x, grad_y):
 
+    """
+    Funcion para calcular la orientación de un gradiente dado
+    """
+
+    # guardamos los vectores dados en forma de un vector de una fila
     vectores_u = np.concatenate([ grad_x.reshape(-1, 1), grad_y.reshape(-1,1) ], axis = 1)
+
+    # calculamos las normales del vector
     normas_vectores_u = np.linalg.norm(vectores_u, axis = 1)
 
+    # calculamos los senos y cosenos dividiendo el vector por su norma
     sin_cos_vectores_u = vectores_u / normas_vectores_u.reshape(-1, 1)
     cosenos = sin_cos_vectores_u[:, 0]
     senos = sin_cos_vectores_u[:, 1]
 
+    # la orientacion es el seno entre el coseno, y tenemos cuidado de no dividir por 0
     orientacion = np.divide(senos, cosenos, out = np.zeros(senos.shape), where = cosenos != 0.0)
 
+    # le aplicamos la arctan para pasarlo a radianes
     radianes = np.arctan(orientacion)
 
+    # y lo pasamos a grados
     grados = np.degrees(radianes)
 
+    # nos aseguramos que estan en el rango 0 - 360
     grados[cosenos < 0.0] += 180
     grados[grados < 0.0] += 360
 
@@ -336,55 +368,76 @@ def orientacion_gradiente(grad_x, grad_y):
 
 def puntos_harris(imagen, tam_bloque, tam_ventana, num_escalas, sigma_p_gauss, umbral_harris, ksize):
 
+    """
+    Funcion para calcular los puntos harris de una imagen
+    """
+
+    # calculamos la piramide gaussiana
     piramide_gauss = piramide_gaussiana_cv(imagen, num_escalas)
 
+
+    # fijamos el sigma a lo que nos dice el guion
     sigma = 4.5
 
+    # calculamos la piramide de las derivadas
     piramide_derivada_x, piramide_derivada_y = piramide_derivada_gaussiana(imagen, ksize, num_escalas, sigma)
 
     puntos_harris = []
     puntos_harris_corregidos = []
 
+    # para el numero de escalas que nos piden
     for i in range(num_escalas):
 
+        # calculamos los puntos de interes de ese nivel de la escala
         p_interes = puntos_interes(piramide_gauss[i], tam_bloque, ksize)
 
 
         # ponemos a 0 los puntos que no cumplen con el umbral
         p_interes[p_interes < umbral_harris] = 0.0
 
+        # aplicamos la supresion de no maximos a los puntos de interes
         p_interes = supresion_no_maximos(p_interes, tam_ventana)
 
+        # nos quedamos con los positivos
         puntos_a_usar = np.where(p_interes > 0.0)
 
+        # guardamos las derivadas de los puntos a usar en la escala actual
         derivadas_no_eliminados_x = piramide_derivada_x[i][puntos_a_usar]
         derivadas_no_eliminados_y = piramide_derivada_y[i][puntos_a_usar]
 
-        escala_puntos = (i + 1) * tam_bloque
+        # estimacion de la escala de los puntos, como nos dice en el guion
+        escala_puntos = 2**(i) * tam_bloque
 
+        # calculamos la orientacion de los puntos actuales
         orientacion_puntos = orientacion_gradiente( derivadas_no_eliminados_x, derivadas_no_eliminados_y )
 
         puntos_escala = []
 
+        # calculamos todos los puntos de una escala
         for y, x, o in zip(*puntos_a_usar, orientacion_puntos):
             puntos_escala.append(cv.KeyPoint(float(x)*2**i, float(y)*2**i, escala_puntos, o))
 
 
+        # separamos la x e y de los puntos a usar
         puntos_x = puntos_a_usar[0].reshape(-1, 1)
         puntos_y = puntos_a_usar[1].reshape(-1, 1)
 
+        # los ponemos en un vector fila
         puntos = np.concatenate([puntos_x, puntos_y], axis = 1)
 
         # paramos con 15 iteraciones o con epsilon < 0.01
         criterio = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 15, 0.01)
 
+        # aplicamos cornerSubPix  para obtener los puntos corregidos
         puntos = cv.cornerSubPix(piramide_gauss[i], puntos.astype(np.float32), (3,3), (-1, -1), criterio)
 
+        # aplicamos la correccion a los puntos
         puntos = np.round(puntos)
         puntos = np.flip(puntos, axis = 1)
         puntos *= 2**i
 
 
+        # guardamos los puntos y los puntos corregidos de la escala actual
         puntos_harris.append(puntos_escala)
         puntos_harris_corregidos.append(puntos)
 
