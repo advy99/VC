@@ -545,6 +545,7 @@ distintos = distinto_x * distinto_y
 
 puntos_distintos = np.where(distintos == True)
 
+# copiamos la imagen original
 comparar_puntos = np.copy(yosemite_1_color)
 
 comparar_puntos = normaliza_imagen_255(comparar_puntos)
@@ -558,6 +559,7 @@ for aleatorio in np.random.choice(puntos_distintos[0], 3, replace = False):
     original = original.astype(np.uint8)
     corregido = corregido.astype(np.uint8)
 
+    # dibujamos el punto original y corregido como circulos en la imagen
     comparar_puntos = cv.circle(comparar_puntos, tuple(original), 2, (255, 0, 0))
     comparar_puntos = cv.circle(comparar_puntos, tuple(corregido), 2, (0, 0, 255))
 
@@ -565,11 +567,13 @@ for aleatorio in np.random.choice(puntos_distintos[0], 3, replace = False):
     px = original[0]
     py = original[1]
 
+    # calculamos el rango de ventana 9x9 que queremos ver
     rango = np.array([px - 4, px + 5, py - 4, py + 5])
     rango = rango.astype(int)
 
     rango[rango < 0] = 0
 
+    # y lo mostramos
     ventana = comparar_puntos[rango[2]:rango[3], rango[0]:rango[1]]
 
     mostrar_imagen( ventana )
@@ -580,6 +584,9 @@ Apartado 2
 """
 
 def puntos_descriptores_AKAZE(imagen, umbral):
+    """
+    Funcion para obtener los puntos clave y descriptores usando AKAZE
+    """
 
     akaze = cv.AKAZE_create(threshold = umbral)
 
@@ -589,7 +596,10 @@ def puntos_descriptores_AKAZE(imagen, umbral):
 
 
 def coincidencias_descriptores_fuerza_bruta(descriptores1, descriptores2):
-
+    """
+    Funcion para obtener las correspondencias entre dos descriptores usando
+    fuerza bruta
+    """
     emparejador = cv.BFMatcher_create(crossCheck = True)
 
     coincidencias = emparejador.match(descriptores1, descriptores2)
@@ -598,7 +608,10 @@ def coincidencias_descriptores_fuerza_bruta(descriptores1, descriptores2):
 
 
 def coincidencias_descriptores_2nn(descriptores1, descriptores2):
-
+    """
+    Funcion para obtener las correspondencias entre dos descriptores usando
+    un 2NN
+    """
     emparejador = cv.BFMatcher_create()
 
     coincidencias = emparejador.knnMatch(descriptores1, descriptores2, k = 2)
@@ -608,7 +621,10 @@ def coincidencias_descriptores_2nn(descriptores1, descriptores2):
 
 
 def coincidencias_descriptores_lowe_average_2nn(descriptores1, descriptores2):
-
+    """
+    Funcion para obtener las correspondencias entre dos descriptores usando
+    2NN y aplicando el criterio de Lowe
+    """
     coincidencias = coincidencias_descriptores_2nn(descriptores1, descriptores2)
 
     coincidencias_lowe = []
@@ -623,6 +639,10 @@ def coincidencias_descriptores_lowe_average_2nn(descriptores1, descriptores2):
 
 
 def dibujar_coincidencias(imagen1, imagen2, puntos_clave1, puntos_clave2, coincidencias, a_mostrar = 100):
+    """
+    Funcion para obtener una imagen con las coincidencias entre dos imagenes,
+    dadas las imagenes, sus puntos clave, y las coincidencias. Como parametro opcional, se nos puede dar el numero de coincidencias a dibujar, por defecto 100
+    """
 
 
     imagen1 = normaliza_imagen_255(imagen1)
@@ -631,9 +651,10 @@ def dibujar_coincidencias(imagen1, imagen2, puntos_clave1, puntos_clave2, coinci
     # juntamos las dos imagenes
     imagen_resultado = np.concatenate([imagen1, imagen2], axis=1)
 
+    # escogemos a_mostrar aleatorias
     coincidencias_aleatorias = np.random.choice(coincidencias, a_mostrar, replace = False)
 
-
+    # las dibujamos usando drawMatches
     imagen_resultado = cv.drawMatches(imagen1, puntos_clave1, imagen2, puntos_clave2, coincidencias_aleatorias, imagen_resultado, flags = cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
 
@@ -641,7 +662,7 @@ def dibujar_coincidencias(imagen1, imagen2, puntos_clave1, puntos_clave2, coinci
 
 
 
-
+# probamos la funcion
 puntos_yosemite1, descriptores_yosemite1 = puntos_descriptores_AKAZE(yosemite_1_bn, 0.1)
 puntos_yosemite2, descriptores_yosemite2 = puntos_descriptores_AKAZE(yosemite_2_bn, 0.1)
 
@@ -673,10 +694,17 @@ Apartado 3 y 4
 
 def panorama_imagenes(imagenes):
 
-    # se supone que estan ordenadas de derecha a izquierda
+    """
+    Funcion para crear un panorama entre N imagenes
+    """
 
+    # se supone que estan ordenadas de derecha a izquierda
+    # centro sera la posicion donde esta en imagenes la imagen central
     centro = len(imagenes) // 2
 
+    # calculamos el tamaño para el resultado
+    # aqui nos ponemos en el peor de los casos y creamos el resultado
+    # más grande de lo que deberíamos, luego lo ajustamos
     tam_resul_x = 0
     tam_resul_y = 0
 
@@ -692,12 +720,17 @@ def panorama_imagenes(imagenes):
 
     imagen_central = normaliza_imagen_255(imagenes[centro])
 
+    # creamos la homografia inicial. Como vamos a comenzar con la imagen central
+    # el desplazamiento es la mitad del cuadro de resultado generado, para
+    # ponerla en el centro
     homografia = np.array( [[1, 0, desp_homo_x],
                             [0, 1, desp_homo_y],
                             [0, 0, 1]], dtype = np.float64 )
 
+    # ponemos la imagen central
     resultado = cv.warpPerspective(imagen_central, homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
 
+    # hacemos una copia de la homografia
     copia_homografia = np.copy(homografia)
 
     # parte derecha del panorama
@@ -706,14 +739,17 @@ def panorama_imagenes(imagenes):
         destino = imagenes[i]
         fuente = imagenes[i + 1]
 
+        # sacamos los puntos y descriptores de cada imagen
         puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.1)
         puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.1)
 
+        # las coincidencias con lowe 2NN
         coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores_destino, descriptores_fuente)
 
         puntos_destino = []
         puntos_fuente = []
 
+        # sacamos los puntos de destino y fuente donde hay coincidencias
         for coincidencia in coincidencias:
             puntos_destino.append(puntos_interes_destino[coincidencia.queryIdx].pt)
             puntos_fuente.append(puntos_interes_fuente[coincidencia.trainIdx].pt)
@@ -722,20 +758,31 @@ def panorama_imagenes(imagenes):
         puntos_fuente = np.array(puntos_fuente, dtype = np.float32)
 
 
+        # obtenemos la homografia donde iría la imagen
         homografia_cv, _ = cv.findHomography(puntos_fuente, puntos_destino, cv.RANSAC, 5)
+        # aplicamos una multiplicacion matricual para actualizar la homografia
+        # que estamos usando, de cara a que se apilen las transformaciones
+        # de forma que se vayan posicionando de forma correcta el resultado
         copia_homografia = np.dot(copia_homografia, homografia_cv)
 
         copia_fuente = normaliza_imagen_255(fuente)
 
+        # por ultimo, añadimos la imagen al resultado con warpPerspective
         resultado = cv.warpPerspective(copia_fuente, copia_homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
 
 
+    # cuando hacemos todas las de la parte derecha, sabemos hasta donde ha llegado
+    # para recortar el resultado. Añadimos cierto margen, ya que al deformar las
+    # imagenes y el propio tamaño de la imagen hace que necesitemos más espacio
     ancho_max = copia_homografia[1][2] + imagenes[len(imagenes) - 1].shape[0] * 1.4
     alto_max = copia_homografia[0][2] + imagenes[len(imagenes) - 1].shape[1] * 1.4
 
+    # lo pasamos a entero
     ancho_max = int(ancho_max)
     alto_max = int(alto_max)
 
+    # volvemos a la homografia inicial, ya que empezamos desde el inicio, pero
+    # hacia la izquierda
     copia_homografia = np.copy(homografia)
 
     # parte izquierda del panorama
@@ -743,14 +790,17 @@ def panorama_imagenes(imagenes):
         destino = imagenes[i]
         fuente = imagenes[i - 1]
 
+        # sacamos puntos de interes y descriptores
         puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.1)
         puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.1)
 
+        # sacamos coincidencias
         coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores_destino, descriptores_fuente)
 
         puntos_destino = []
         puntos_fuente = []
 
+        # sacamos los puntos de las coincidencias
         for coincidencia in coincidencias:
             puntos_destino.append(puntos_interes_destino[coincidencia.queryIdx].pt)
             puntos_fuente.append(puntos_interes_fuente[coincidencia.trainIdx].pt)
@@ -758,29 +808,40 @@ def panorama_imagenes(imagenes):
         puntos_destino = np.array(puntos_destino, dtype = np.float32)
         puntos_fuente = np.array(puntos_fuente, dtype = np.float32)
 
+        # al igual que antes, obtenemos la homografia
         homografia_cv, _ = cv.findHomography(puntos_fuente, puntos_destino, cv.RANSAC, 5)
+        # la apilamos con las anteriores
         copia_homografia = np.dot(copia_homografia, homografia_cv)
 
         copia_fuente = normaliza_imagen_255(fuente)
 
+        # y la aplicamos
         resultado = cv.warpPerspective(copia_fuente, copia_homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
 
+    # guardamos el extremo utilizado por la homografia, para recortar la imagen.
+    # en este caso no necesitamos aplicar un ajuste ya que la imagen se ha colocado
+    # en la derecha de este punto, y nos interesa el extremo izquierdo
     ancho_min = copia_homografia[1][2]
     alto_min = copia_homografia[0][2]
 
     ancho_min = int(ancho_min)
     alto_min = int(alto_min)
 
+    # el resultado es el resultado original, pero recortando toda la zona negra sin utilizar
     resultado = resultado[ancho_min:ancho_max, alto_min:alto_max ]
 
     return resultado
 
 
 def panorama_2_imagenes(imagen1, imagen2):
+    """
+    Funcion para calcular el panorama de dos imagenes. Simplemente llamamos
+    a la de N imagenes, pero con dos
+    """
     return panorama_imagenes([imagen1, imagen2])
 
 
-
+# leemos las imagenes de la etsiit
 mosaico_etsiit = []
 
 for i in range(2, 10):
@@ -794,10 +855,11 @@ imagenes_etsiit = []
 for imagen in mosaico_etsiit:
     imagenes_etsiit.append(leeimagen(imagen, 1))
 
-
+# hacemos el panorama de la etsiit y de las dos imagenes de yosemite
 panorama_etsiit = panorama_imagenes(imagenes_etsiit)
 panorama_yosemite = panorama_2_imagenes(yosemite_1_color, yosemite_2_color)
 
+# mostramos los resultados
 mostrar_imagen(panorama_yosemite)
 mostrar_imagen(panorama_etsiit)
 
