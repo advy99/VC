@@ -660,12 +660,18 @@ def panorama_2_imagenes(imagen1, imagen2):
 
 
 
-mosaico_etsiit = [f"imagenes/mosaico00{num}.jpg" for num in range(2,10)]
-mosaico_etsiit += [f"imagenes/mosaico0{num}.jpg" for num in range(10, 12)]
+mosaico_etsiit = []
 
-imagenes_etsiit = [leeimagen(imagen, 1) for imagen in mosaico_etsiit]
+for i in range(2, 10):
+    mosaico_etsiit.append("imagenes/mosaico00{}.jpg".format(i) )
 
-img_yosemite = [yosemite_1_color, yosemite_2_color]
+for i in range(10, 12):
+    mosaico_etsiit.append("imagenes/mosaico0{}.jpg".format(i) )
+
+imagenes_etsiit = []
+
+for imagen in mosaico_etsiit:
+    imagenes_etsiit.append(leeimagen(imagen, 1))
 
 
 panorama_etsiit = panorama_imagenes(imagenes_etsiit)
