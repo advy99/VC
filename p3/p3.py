@@ -580,11 +580,21 @@ def panorama_2_imagenes(imagen1, imagen2):
 
 
 
-def panorama_imagenes(imagenes, tam_resul_x, tam_resul_y, desp_homo_x, desp_homo_y):
+def panorama_imagenes(imagenes):
 
     # se supone que estan ordenadas de derecha a izquierda
 
     centro = len(imagenes) // 2
+
+    tam_resul_x = 0
+    tam_resul_y = 0
+
+    for imagen in imagenes:
+        tam_resul_x += imagen.shape[1]
+        tam_resul_y += imagen.shape[0]
+
+    desp_homo_x = tam_resul_x // 2
+    desp_homo_y = tam_resul_y // 2
 
     resultado = np.zeros( ( tam_resul_x, tam_resul_y ) , dtype = np.uint8 )
     resultado = cv.cvtColor(resultado, cv.COLOR_BGR2RGB)
@@ -629,6 +639,12 @@ def panorama_imagenes(imagenes, tam_resul_x, tam_resul_y, desp_homo_x, desp_homo
         resultado = cv.warpPerspective(copia_fuente, copia_homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
 
 
+    ancho_max = copia_homografia[1][2] + imagenes[len(imagenes) - 1].shape[0] * 1.4
+    alto_max = copia_homografia[0][2] + imagenes[len(imagenes) - 1].shape[1] * 1.4
+
+    ancho_max = int(ancho_max)
+    alto_max = int(alto_max)
+
     copia_homografia = np.copy(homografia)
 
     # parte izquierda del panorama
@@ -658,6 +674,13 @@ def panorama_imagenes(imagenes, tam_resul_x, tam_resul_y, desp_homo_x, desp_homo
 
         resultado = cv.warpPerspective(copia_fuente, copia_homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
 
+    ancho_min = copia_homografia[1][2]
+    alto_min = copia_homografia[0][2]
+
+    ancho_min = int(ancho_min)
+    alto_min = int(alto_min)
+
+    resultado = resultado[ancho_min:ancho_max, alto_min:alto_max ]
 
     mostrar_imagen(resultado)
 
@@ -670,6 +693,6 @@ imagenes_etsiit = [leeimagen(imagen, 1) for imagen in mosaico_etsiit]
 
 img_yosemite = [yosemite_1_color, yosemite_2_color]
 
-panorama_imagenes(img_yosemite, 1000, 1000, 350, 100)
+panorama_imagenes(imagenes_etsiit)
 
 
