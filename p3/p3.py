@@ -730,6 +730,55 @@ def panorama_imagenes(imagenes):
     # ponemos la imagen central
     resultado = cv.warpPerspective(imagen_central, homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
 
+
+    # volvemos a la homografia inicial, ya que empezamos desde el inicio, pero
+    # hacia la izquierda
+    copia_homografia = np.copy(homografia)
+
+    # parte izquierda del panorama
+    for i in range(centro, 0, -1):
+        destino = imagenes[i]
+        fuente = imagenes[i - 1]
+
+        # sacamos puntos de interes y descriptores
+        puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.1)
+        puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.1)
+
+        # sacamos coincidencias
+        coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores_destino, descriptores_fuente)
+
+        puntos_destino = []
+        puntos_fuente = []
+
+        # sacamos los puntos de las coincidencias
+        for coincidencia in coincidencias:
+            puntos_destino.append(puntos_interes_destino[coincidencia.queryIdx].pt)
+            puntos_fuente.append(puntos_interes_fuente[coincidencia.trainIdx].pt)
+
+        puntos_destino = np.array(puntos_destino, dtype = np.float32)
+        puntos_fuente = np.array(puntos_fuente, dtype = np.float32)
+
+        # al igual que antes, obtenemos la homografia
+        homografia_cv, _ = cv.findHomography(puntos_fuente, puntos_destino, cv.RANSAC, 5)
+        # la apilamos con las anteriores
+        copia_homografia = np.dot(copia_homografia, homografia_cv)
+
+        copia_fuente = normaliza_imagen_255(fuente)
+
+        # y la aplicamos
+        resultado = cv.warpPerspective(copia_fuente, copia_homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
+
+    # guardamos el extremo utilizado por la homografia, para recortar la imagen.
+    # en este caso no necesitamos aplicar un ajuste ya que la imagen se ha colocado
+    # en la derecha de este punto, y nos interesa el extremo izquierdo
+    ancho_min = copia_homografia[1][2]
+    alto_min = copia_homografia[0][2]
+
+    ancho_min = int(ancho_min)
+    alto_min = int(alto_min)
+
+
+
     # hacemos una copia de la homografia
     copia_homografia = np.copy(homografia)
 
@@ -781,57 +830,17 @@ def panorama_imagenes(imagenes):
     ancho_max = int(ancho_max)
     alto_max = int(alto_max)
 
-    # volvemos a la homografia inicial, ya que empezamos desde el inicio, pero
-    # hacia la izquierda
-    copia_homografia = np.copy(homografia)
-
-    # parte izquierda del panorama
-    for i in range(centro, 0, -1):
-        destino = imagenes[i]
-        fuente = imagenes[i - 1]
-
-        # sacamos puntos de interes y descriptores
-        puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.1)
-        puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.1)
-
-        # sacamos coincidencias
-        coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores_destino, descriptores_fuente)
-
-        puntos_destino = []
-        puntos_fuente = []
-
-        # sacamos los puntos de las coincidencias
-        for coincidencia in coincidencias:
-            puntos_destino.append(puntos_interes_destino[coincidencia.queryIdx].pt)
-            puntos_fuente.append(puntos_interes_fuente[coincidencia.trainIdx].pt)
-
-        puntos_destino = np.array(puntos_destino, dtype = np.float32)
-        puntos_fuente = np.array(puntos_fuente, dtype = np.float32)
-
-        # al igual que antes, obtenemos la homografia
-        homografia_cv, _ = cv.findHomography(puntos_fuente, puntos_destino, cv.RANSAC, 5)
-        # la apilamos con las anteriores
-        copia_homografia = np.dot(copia_homografia, homografia_cv)
-
-        copia_fuente = normaliza_imagen_255(fuente)
-
-        # y la aplicamos
-        resultado = cv.warpPerspective(copia_fuente, copia_homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
-
-    # guardamos el extremo utilizado por la homografia, para recortar la imagen.
-    # en este caso no necesitamos aplicar un ajuste ya que la imagen se ha colocado
-    # en la derecha de este punto, y nos interesa el extremo izquierdo
-    ancho_min = copia_homografia[1][2]
-    alto_min = copia_homografia[0][2]
-
-    ancho_min = int(ancho_min)
-    alto_min = int(alto_min)
-
     # el resultado es el resultado original, pero recortando toda la zona negra sin utilizar
     resultado = resultado[ancho_min:ancho_max, alto_min:alto_max ]
 
     return resultado
 
+def panorama_3_imagenes(imagen1, imagen2, imagen3):
+    """
+    Funcion para calcular el panorama de dos imagenes. Simplemente llamamos
+    a la de N imagenes, pero con dos
+    """
+    return panorama_imagenes([imagen1, imagen2])
 
 def panorama_2_imagenes(imagen1, imagen2):
     """
@@ -856,10 +865,12 @@ for imagen in mosaico_etsiit:
     imagenes_etsiit.append(leeimagen(imagen, 1))
 
 # hacemos el panorama de la etsiit y de las dos imagenes de yosemite
+panorama_etsiit_3 = panorama_3_imagenes(*imagenes_etsiit[2:5])
 panorama_etsiit = panorama_imagenes(imagenes_etsiit)
 panorama_yosemite = panorama_2_imagenes(yosemite_1_color, yosemite_2_color)
 
 # mostramos los resultados
+mostrar_imagen(panorama_etsiit_3)
 mostrar_imagen(panorama_yosemite)
 mostrar_imagen(panorama_etsiit)
 
