@@ -179,6 +179,95 @@ Trabajaremos con puntos Harris, descriptores de puntos con AKAZE, y por último 
 
 \section{Detección de punto Harris}
 
+Este apartado trata sobre la detección de puntos de interes utilizando el algoritmo de detección de esquinas Harris, que se trata de, utilizando una pirámide gaussiana de la imagen sobre la que obtener los puntos de interes de cara a trabajar con varias escalas y una pirámide con las derivadas de cara a obtener el gradiente, calcular los puntos de interes usando el criterio de Harris, aplicar una supresión de no máximos de cara a quedarse con los más prometedores y con estos calcular su orientación utilizando su gradiente\cite{harris}.
+
+En mayor detalle, para cada escala (nivel de la pirámide construida), realizaremos:
+
+\begin{enumerate}
+	\item Detección de puntos de interes: Utilizando la función de OpenCV \texttt{cornerEigenValsAndVecs} obtendremos los valores singulares, para despues aplicarles el criterio Harris: $\frac{\lambda_{1} \lambda_{2}}{\lambda_{1} + \lambda_{2}}$.
+	\item Aplicar el umbral Harris: Eliminar los valores por debajo de este umbral.
+	\item Supresión de no máximos: Dado un tamaño de ventana, recorreremos la imagen actual con ese tamaño de ventana, obteniendo el valor máximo de la ventana actual, y si el centro de la ventana (pixel actual) es el máximo, almacenaremos ese valor en el resultado, si no, lo descartaremos.
+	\item Estimación de la escala de los puntos en píxeles: Como nos dice en el guión, haremos una estimación de la escala de forma que sea igual a $2^{nivel\_piramide - 1} \cdot tam\_bloque$.
+	\item Calculo de la orientación de los puntos: Utilizando el gradiente de los puntos considerados de interes, calcularemos la norma de dichos puntos y con eso su orientación. Como nos dice el guión, en este apartado utilizaremos el gradiente de las imágenes aplicandole un alisamiento con $\sigma = 4.5$.
+	\item Calculo del KeyPoint de OpenCV utilizando el método \texttt{KeyPoint} y los valores calculados.
+\end{enumerate}
+
+Y con esto ya tendremos los puntos de interes. Además de estos puntos, la función implementada devolverá los puntos corregidos, que son calculados de la siguiente forma:
+
+\begin{enumerate}
+	\item Concatenar los valores de X e Y de los puntos en un vector fila, de cara a poder utilizarlos en el siguiente punto.
+	\item Utilizar el método \texttt{cornerSubPix} como nos dice el guión para obtener los puntos corregidos, usando como criterio de parada quince iteraciones o un epsilon menos a $0.01$. Se han escogido estos valores ya que han funcionado bastante bien de forma empírica.
+	\item Redondeo y adaptación de los ejes de los puntos obtenidos por la función \texttt{cornerSubPix}.
+\end{enumerate}
+
+
+Como vemos, en este apartado tenemos bastantes parámetros con los que trabajar:
+
+\begin{enumerate}
+	\item Tamaño del bloque: Fijado a cinco, como nos decía el guión, podía ser desde 3x3 a 7x7, en mi caso el tamaño cinco se ha comportado bastante bien de forma empírica, y por eso lo he escogido.
+	\item Tamaño de la ventana: En este caso se nos daba entre utilizar tamaños 3x3, 5x5 y 7x7. Al utilizar tamaños más pequeños se obtenian muchos más puntos, ya que tendríamos un mayor número de ventanas, pero se obtenian demasiados puntos para el umbral utilizado (que comentaré más adelante), por este motivo he utilizado el tamaño 7x7.
+	\item Número de escalas: Como nos decía el guión, tres escalas.
+	\item Sigma de la pirámide Gaussiana: En este caso, como nos comentaba el guión, he utilizado $\sigma = 4.5$.
+	\item Umbral del criterio Harris: Como nos decía la bibliografía\cite{harris}, he utilizado un umbral $t = 10.0$, en los resultados de este apartado pondré un ejemplo de utilizar un umbrál distinto.
+	\item Tamaño del kernel para calcular las derivadas: En este caso también se nos recomendaban los valores de ksize de tres o cinco, y en mi caso he optado por el valor tres ya que se comportaba de forma correcta.
+\end{enumerate}
+
+Tras describir la función con la que obtenemos los puntos Harris a las distintas escalas, para visualizarlos simplemente se ha usado una lista con todos los puntos (de todas las escalas), y se ha utilizado el método \texttt{drawKeypoints} para dibujarlos sobre la imagen, utilizando la opción\\  \texttt{DRAW\_MATCHES\_FLAGS\_DRAW\_RICH\_KEYPOINTS} de forma que dibujará los puntos acorde a la escala, y con su orientación.
+
+Otro detalle a tener en cuenta es que aunque se ha utilizado la imagen en blanco y negro para obtener los puntos (como nos recomendaba el guión y nos obliga OpenCV), se han mostrado sobre la imagen a color para quela distinción de los puntos sobre la imagen sea más llamativa. Se ha obtenido el siguiente resultado:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{p_harris_h_10.png}
+ 		\caption{Puntos Harris sobre la imágen Yosemite1.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{p_harris_h_10_y2.png}
+ 		\caption{Puntos Harris sobre la imágen Yosemite2.}
+\end{figure}
+
+Como vemos los resultados son bastante buenos, y como se nos pedía, hemos calculado unos 2000 puntos en cada imágen, distribuidos de la siguiente forma.
+
+Para la imagen Yosemite1:
+
+\begin{lstlisting}
+La escala  0  tiene  1478  puntos
+La escala  1  tiene  375  puntos
+La escala  2  tiene  109  puntos
+\end{lstlisting}
+
+Para la imagen Yosemite2:
+
+\begin{lstlisting}
+La escala  0  tiene  1506  puntos
+La escala  1  tiene  392  puntos
+La escala  2  tiene  114  puntos
+\end{lstlisting}
+
+Tal y como nos pedía el guión, alrededor de un 70\% de los puntos en el nivel más grande, un 25\% en el siguiente nivel, y por último el 5\% restante en el nivel más bajo.
+
+
+Como hemos visto, la mayoría de parámetros son parámetros que ya hemos visto y estudiado en otras prácticas (en especial la primera), sin embargo, aquí aparece un nuevo parámetro, el umbral Harris, que de cara a estudiar su importancia, he repetido la prueba de Yosemite1 pero utilizando un umbral de 300 en lugar de 10:
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{p_harris_h_300.png}
+ 		\caption{Puntos Harris sobre la imágen Yosemite1 con umbral Harris de 300.}
+\end{figure}
+
+Con el que obtenemos el siguiente número de puntos:
+
+\begin{lstlisting}
+La escala  0  tiene  915  puntos
+La escala  1  tiene  155  puntos
+La escala  2  tiene  31  puntos
+\end{lstlisting}
+
+Como era de esperar, se eliminan muchos de los puntos de interes obtenidos, aunque los parámetros son los mismos a excepción del umbral, por lo que este parámetro nos puede ayudar a ajustar el número de puntos a obtener manteniendo la forma de calcular los distintos puntos, al mantener los tamaños de bloque, ksize, entre otros.
+
 \section{Descriptores AKAZE y correspondencias entre dos imágenes}
 
 \section{Mosaico de imágenes}
@@ -193,6 +282,13 @@ Trabajaremos con puntos Harris, descriptores de puntos con AKAZE, y por último 
 
 
 \begin{thebibliography}{9}
+
+	\bibitem{harris}
+
+		Multi-Image Matching using Multi-Scale Oriented Patches --- Matthew Brown, Richard Szeliski y Simon Winder
+
+		\url{http://matthewalunbrown.com/papers/cvpr05.pdf}
+
 
 \end{thebibliography}
 
