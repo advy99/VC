@@ -517,6 +517,12 @@ imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos)
 
 mostrar_imagen(imagen_con_puntos)
 
+puntos, puntos_corregidos = puntos_harris(yosemite_2_bn, tam_bloque = 5, tam_ventana = 7, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 10.0, ksize = 3)
+
+imagen_con_puntos = dibujar_puntos_harris(yosemite_2_color, puntos)
+
+mostrar_imagen(imagen_con_puntos)
+
 # comparacion de puntos y puntos corregidos
 
 coordenadas_puntos = []
