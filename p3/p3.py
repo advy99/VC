@@ -376,11 +376,8 @@ def puntos_harris(imagen, tam_bloque, tam_ventana, num_escalas, sigma_p_gauss, u
     piramide_gauss = piramide_gaussiana_cv(imagen, num_escalas)
 
 
-    # fijamos el sigma a lo que nos dice el guion
-    sigma = 4.5
-
     # calculamos la piramide de las derivadas
-    piramide_derivada_x, piramide_derivada_y = piramide_derivada_gaussiana(imagen, ksize, num_escalas, sigma)
+    piramide_derivada_x, piramide_derivada_y = piramide_derivada_gaussiana(imagen, ksize, num_escalas, sigma_p_gauss)
 
     puntos_harris = []
     puntos_harris_corregidos = []
@@ -506,7 +503,7 @@ yosemite_2_color = leeimagen("imagenes/Yosemite2.jpg", 1)
 
 # sacamos los puntos con la imagen en B/N y los pintamos en la imagen a color
 # ya que no podemos obtener los puntos de la imagen a color
-puntos, puntos_corregidos = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 10.0, ksize = 3)
+puntos, puntos_corregidos = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 7, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 10.0, ksize = 3)
 
 imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos)
 
@@ -514,7 +511,7 @@ mostrar_imagen(imagen_con_puntos)
 
 
 # probamos un umbral más grande
-puntos, puntos_corregidos = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 3, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 300.0, ksize = 3)
+puntos, puntos_corregidos = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 7, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 300.0, ksize = 3)
 
 imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos)
 
