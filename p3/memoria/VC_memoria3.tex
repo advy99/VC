@@ -300,7 +300,44 @@ Se puede observar como se modifican ligeramente las posiciones de los puntos, y 
 
 En este apartado nos centraremos en dectecar los puntos de interes así como sus descriptores utilizando AKAZE\cite{akaze}, la versión acelerada de KAZE\cite{kaze}.
 
-Para este ejercicio
+Para este ejercicio se ha hecho uso del método \texttt{AKAZE\_create} de OpenCV para crear un objeto de la clase AKAZE, con el que calcularemos los puntos clave y los descriptores de la imagen.
+
+Aunque se han utilizado los parámetros por defecto, he añadido el parámetro de umbral de cara a crear el detector AKAZE. Este umbral será el umbral será el umbral para aceptar un punto y usaremos el valor por defecto en OpenCV, $0.1$.
+
+Para obtener los descriptores y los puntos clave, simplemente se llamará a la función \texttt{detectAndCompute} de la instancia creada de AKAZE.
+
+
+Una vez tenemos los descriptores y puntos de dos imágenes necesitamos encontrar las coincidencias entre estos dos. Para esto usaremos dos métodos, ambos utilizando un objeto de la clase \texttt{BFMatcher} de OpenCV:
+
+\begin{enumerate}
+	\item Fuerza bruta con validación cruzada: Utilizando el método \texttt{match}, pasando como argumento los descriptores de ambas imágenes, obtendremos las coincidencias utilizando un algoritmo de fuerza bruta. Para utilizar validación cruzada será necesario establecer el parámetro \texttt{crossCheck} a verdadero en la creación del objeto BFMatcher.
+	\item Clasificador 2NN aplicando el criterio de Lowe: Al igual que el anterior, pero en lugar de utilizar el método \texttt{match} utilizaremos el método \texttt{knnMatch} con $k = 2$, y al resultado le aplicaremos el criterio de Lowe. Este criterio se basa en eliminar todas las coincidencias donde el radio de la distancia entre los puntos es mayor que el $0.8$, consiguiendo eliminar alrededor de un 90\% de falsos positivos, y eliminando únicamente alrededor de un 5\% de coincidencias reales\cite{lowe}.
+\end{enumerate}
+
+
+Una vez tenemos tanto los puntos clave como las coincidencias, dibujamos los resultados utilizando el método de OpenCV \texttt{drawMatches}. Como nos dice el guión, escogeremos cien coincidencias aleatorias y solo dibujaremos esas, de cara a poder distinguir con claridad los resultados:
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{correspondencias_fuerza_bruta.png}
+ 		\caption{Correspondencias entre Yosemite1 y Yosemite2 utilizando fuerza bruta con validación cruzada.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{correspondencias_lowe_2nn.png}
+ 		\caption{Correspondencias entre Yosemite1 y Yosemite2 utilizando 2NN y aplicando el criterio de Lowe.}
+\end{figure}
+
+
+Como vemos, el método de fuerza bruta con validación cruzada queda bastante atrás con respecto al método de 2NN con el criterio de Lowe, ya que como podemos observar se consigue un número de errores considerablemente menor.
+
+En especial vemos como la mayoría de fallos utilizando fuerza bruta se producen entre puntos con gran distancia, por lo que en el caso en el que utilizamos el criterio de Lowe observamos que no se producen tantos errores. Aun así si se siguen produciendo errores en el caso de 2NN con el criterio de Lowe, aunque se tratan más bien de casos excepcionales que en lo común, al contrario que en el primer caso.
+
+Otra de las tendencias que podemos observar es que los errores que se producen en las mismas zonas de la primera imagen, llevan a puntos (en este caso erroneos) de las mismas zonas en la segunda imagen, como por ejemplo, los puntos de la zona sombreada más a la izquierda de la primera imagen suelen coincidir con la zona central superior de la segunda imagen, ya que los interpreta como zonas similares, aunque en este caso sea erroneo.
+
+
+\newpage
 
 \section{Mosaico de imágenes}
 
@@ -333,6 +370,12 @@ Para este ejercicio
 
 		\url{https://web.archive.org/web/20200114013631/http://www.robesafe.com/personal/pablo.alcantarilla/papers/Alcantarilla13bmvc.pdf}
 
+
+	\bibitem{lowe}
+
+		Distinctive Image Featuresfrom Scale-Invariant Keypoints --- David G. Lowe
+
+		\url{https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf}
 
 
 \end{thebibliography}
