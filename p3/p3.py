@@ -509,6 +509,8 @@ imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos)
 
 mostrar_imagen(imagen_con_puntos)
 
+input("---------- Pulsa una tecla para continuar ----------")
+
 
 # probamos un umbral más grande
 puntos, puntos_corregidos = puntos_harris(yosemite_1_bn, tam_bloque = 5, tam_ventana = 7, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 300.0, ksize = 3)
@@ -517,11 +519,15 @@ imagen_con_puntos = dibujar_puntos_harris(yosemite_1_color, puntos)
 
 mostrar_imagen(imagen_con_puntos)
 
+input("---------- Pulsa una tecla para continuar ----------")
+
 puntos, puntos_corregidos = puntos_harris(yosemite_2_bn, tam_bloque = 5, tam_ventana = 7, num_escalas = 3, sigma_p_gauss = 4.5, umbral_harris = 10.0, ksize = 3)
 
 imagen_con_puntos = dibujar_puntos_harris(yosemite_2_color, puntos)
 
 mostrar_imagen(imagen_con_puntos)
+
+input("---------- Pulsa una tecla para continuar ----------")
 
 # comparacion de puntos y puntos corregidos
 
@@ -580,6 +586,8 @@ for aleatorio in np.random.choice(puntos_distintos[0], 3, replace = False):
     ventana = comparar_puntos[rango[2]:rango[3], rango[0]:rango[1]]
 
     mostrar_imagen( ventana )
+
+    input("---------- Pulsa una tecla para continuar ----------")
 
 
 """
@@ -680,8 +688,10 @@ resultado_fuerza_bruta = dibujar_coincidencias(yosemite_1_color, yosemite_2_colo
 resultado_lowe = dibujar_coincidencias(yosemite_1_color, yosemite_2_color, puntos_yosemite1, puntos_yosemite2, coincidencias_lowe)
 
 mostrar_imagen(resultado_fuerza_bruta)
+input("---------- Pulsa una tecla para continuar ----------")
 
 mostrar_imagen(resultado_lowe)
+input("---------- Pulsa una tecla para continuar ----------")
 
 
 
@@ -874,7 +884,10 @@ panorama_yosemite = panorama_2_imagenes(yosemite_1_color, yosemite_2_color)
 
 # mostramos los resultados
 mostrar_imagen(panorama_etsiit_3)
+input("---------- Pulsa una tecla para continuar ----------")
 mostrar_imagen(panorama_yosemite)
+input("---------- Pulsa una tecla para continuar ----------")
 mostrar_imagen(panorama_etsiit)
+input("---------- Pulsa una tecla para continuar ----------")
 
 
