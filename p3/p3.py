@@ -492,7 +492,7 @@ def dibujar_puntos_harris( imagen, puntos ):
     return img_con_puntos
 
 
-np.random.seed(1)
+np.random.seed(123)
 
 # probamos el codigo
 yosemite_1_bn = leeimagen("imagenes/Yosemite1.jpg", 0)
@@ -666,8 +666,8 @@ def dibujar_coincidencias(imagen1, imagen2, puntos_clave1, puntos_clave2, coinci
 
 
 # probamos la funcion
-puntos_yosemite1, descriptores_yosemite1 = puntos_descriptores_AKAZE(yosemite_1_bn, 0.1)
-puntos_yosemite2, descriptores_yosemite2 = puntos_descriptores_AKAZE(yosemite_2_bn, 0.1)
+puntos_yosemite1, descriptores_yosemite1 = puntos_descriptores_AKAZE(yosemite_1_bn, 0.01)
+puntos_yosemite2, descriptores_yosemite2 = puntos_descriptores_AKAZE(yosemite_2_bn, 0.01)
 
 
 coincidencias_fuerza_bruta = coincidencias_descriptores_fuerza_bruta(descriptores_yosemite1, descriptores_yosemite2)
@@ -744,8 +744,8 @@ def panorama_imagenes(imagenes):
         fuente = imagenes[i - 1]
 
         # sacamos puntos de interes y descriptores
-        puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.1)
-        puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.1)
+        puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.01)
+        puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.01)
 
         # sacamos coincidencias
         coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores_destino, descriptores_fuente)
@@ -792,8 +792,8 @@ def panorama_imagenes(imagenes):
         fuente = imagenes[i + 1]
 
         # sacamos los puntos y descriptores de cada imagen
-        puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.1)
-        puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.1)
+        puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.01)
+        puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.01)
 
         # las coincidencias con lowe 2NN
         coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores_destino, descriptores_fuente)
