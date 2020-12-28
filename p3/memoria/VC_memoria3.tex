@@ -341,7 +341,75 @@ Otra de las tendencias que podemos observar es que los errores que se producen e
 
 \section{Mosaico de imágenes}
 
-\section{Mosaico con multiples imágenes}
+Tras haber trabajado la detección de puntos de interes, la extracción de descriptores y usado ambos para buscar correspondencias entre dos imágenes el siguiente paso es utilizar dichas correspondencias para crear un panorama con tres imágenes.
+
+En este caso, además de utilizar los puntos de interes y descriptores de una imagen también utilizaremos las homografías. Una homografía se trata de una relación entre dos imágenes que comparten el mismo plano, es decir, si dos imágenes son similares o iguales, pero tomadas desde distintas posiciones, ambas imágenes estarán relacionadas por una homografía, de forma que si aplicamos la homografía a una de estas obtendremos la otra.
+
+Gracias al uso de homografías conseguiremos crear mosaicos entre dos imágenes A y B siguiendo los siguientes pasos:
+
+\begin{enumerate}
+	\item Calculamos los puntos clave y los descriptores de las imágenes A y B.
+	\item Buscamos las coincidencias entre los puntos clave.
+	\item Calculamos la homografía que relaciona ambas imágenes utilizando el método \texttt{findHomography} de OpenCV.
+	\item Fusionamos ambas imágenes utilizando el método \texttt{warpPerspective} de OpenCV y la homografía calculada en el paso anterior. Como nos sugiere el guión de la práctica, usaré como borde \texttt{BORDER\_TRANSPARENT} de cara a que no se perciba el borde en el resultado.
+\end{enumerate}
+
+De esta forma obtendremos el mosaico entre dos imágenes A y B.
+
+Para conseguir un mosaico con tres imágenes lo que haremos será situar la imagen central en el lienzo del resultado, calcularemos el mosaico de la imagen central y la de la izquierda, y tras esto el mosaico de la imagen centra y la imagen de la derecha.
+
+Algunos detalles de implementación es que el lienzo del resultado, como no sabemos su tamaño a priori, será del mayor tamaño posible, la suma de todos los tamaños de las imágenes. Como al calcular las homografías tanto de la izquierda como de la derecha conocemos la posición final de estas imágenes, luego recortaré el resultado para eliminar las zonas negras sin información del mosaico.
+
+Otro detalle es que inicialmente la imagen central se colocará en el centro del lienzo de resultado ya que no sabemos cuanto ocupará el resultado y como vimos en teoría, al realizar los mosaicos habrá cierta deformación en las imágenes, y la central no se verá afectada, por lo que es la primera imagen a añadir.
+
+Debido a la similitud con el siguiente ejercicio, se ha implementado directamente el siguiente ejercicio ya que es una generalización de este, y los detalles de dicha generalización los explicaré en el siguiente apartado.
+
+El último detalle de implementación es que se ha utilizado el algoritmo RANSAC con un error máximo de 5 reproyecciones, ya que el método por defecto, minimos cuadrados, no nos ofrece unos buenos resultados.
+
+
+El resultado es el siguiente:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{mosaico_tres_imagenes.png}
+ 		\caption{Mosaico de tres imágenes de las vistas de la ETSIIT.}
+\end{figure}
+
+Vemos como el resultado es bastante bueno, y apenas se nota el cambio entre imágenes.
+
+
+\section{Mosaico con un número indefinido de imágenes}
+
+Tras finalizar el apartado anterior, este apartado se trata simplemente de generalizar la creación del mosaico.
+
+Al igual que en el apartado anterior, posicionaremos la imagen central en el centro del resultado, pero en lugar de buscar una homografia con la izquierda y añadirla, recorreremos todas las imágenes a la izquierda, buscando los puntos de interes y descriptores de una imagen y la anterior, buscando su homografía y aplicando el \texttt{warpPerspective} para obtener la solución hasta llegar al inicio de las imágenes, y tras esto realizaremos la misma operación pero desde el centro hasta el final de la lista de imágenes.
+
+Como detalle importante, tendremos la homografía original (posición de la imagen central) almacenada, de forma que para calcular las homografías de las imágenes de la izquierda partiremos de esta, e iremos apilandolo las homografías para calcular la posición de una imagen con respecto a la posición de donde hemos colocado la anterior, no la central.
+
+Una vez acabamos con las imágenes de la izquierda, como pasamos otra vez a calcular desde el centro a la derecha, volveremos a comenzar con la homografia de la imagen central y apilando las homografías calculadas a la derecha.
+
+Al igual que en el apartado anterior, al apilar las homografías, podemos saber el tamaño real del resultado, ya que está almacenado en estas homografías, añadiendo ciertos márgenes a la derecha, ya que la homografía almacena el lugar donde se comienza a dibujar la imagen, no donde acaba, por lo que hay que añadir el espacio de la última imagen a la derecha y un margen para la deformación que hay podido sufrir.
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{mosaico_etsiit.png}
+ 		\caption{Mosaico de todas las imágenes de las vistas de la ETSIIT.}
+\end{figure}
+
+Vemos como de nuevo el resultado es bastante bueno, siendo el esperado, por lo que podemos comprobar que este método es un método que nos permite construir panoramas con gran calidad, y en poco tiempo.
+
+
+\newpage
+
+Como prueba de consistencia del algoritmo implementado he realizado la prueba con dos imágenes, obteniendo un buen resultado y comprobando que el algoritmo realmente es dinámico y se puede utilizar tantas imágenes como se deseen:
+
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{mosaico_dos_imagenes.png}
+ 		\caption{Mosaico de Yosemite1 y Yosemite2.}
+\end{figure}
 
 
 
