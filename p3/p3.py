@@ -891,3 +891,237 @@ mostrar_imagen(panorama_etsiit)
 input("---------- Pulsa una tecla para continuar ----------")
 
 
+
+"""
+Bonus 1:
+"""
+
+def calcular_homografia(puntos_fuente, puntos_destino):
+
+    valores_matriz = []
+    i = 0
+    for i in range(len(puntos_fuente)):
+        p1 = np.array([puntos_fuente[i][0], puntos_fuente[i][1], 1])
+        p2 = np.array([puntos_destino[i][0], puntos_destino[i][1], 1])
+
+        a2 = [0, 0, 0, -p2[2] * p1[0], -p2[2] * p1[1], -p2[2] * p1[2],
+              p2[1] * p1[0], p2[1] * p1[1], p2[1] * p1[2]]
+        a1 = [-p2[2] * p1[0], -p2[2] * p1[1], -p2[2] * p1[2], 0, 0, 0,
+              p2[0] * p1[0], p2[0] * p1[1], p2[0] * p1[2]]
+
+        valores_matriz.append(a1)
+        valores_matriz.append(a2)
+
+    matriz = np.array(valores_matriz)
+
+    u, s, v = np.linalg.svd(matriz)
+
+    homografia = np.reshape(v[8], (3, 3))
+
+    homografia = (1/homografia[2][2]) * homografia
+
+    return homografia
+
+
+def calcular_distancia(punto1, punto2, homografia):
+
+    p1 = np.transpose(np.array([punto1[0], punto1[1], 1]) )
+    estimacionp2 = np.dot(homografia, p1)
+    estimacionp2 = (1/estimacionp2[2]) * estimacionp2
+
+    p2 = np.transpose(np.array([punto2[0], punto2[1], 1]) )
+    error = p2 - estimacionp2
+
+    return np.linalg.norm(error)
+
+
+def ransac(puntos_fuente, puntos_destino, umbral):
+
+
+    max_inliers = []
+    homografia_final = np.zeros((3,3))
+
+    j = 0
+
+    while len(max_inliers) < len(puntos_fuente) * umbral and j < umbral:
+
+        # buscamos 5 correspondencias aleatorias
+        cAleatorias = np.random.choice(len(puntos_fuente), 4, replace = False)
+
+        homografia = calcular_homografia(puntos_fuente[cAleatorias], puntos_destino[cAleatorias])
+
+        inliers = []
+
+        for i in range(len(puntos_fuente)):
+            distancia = calcular_distancia(puntos_fuente[i], puntos_destino[i], homografia)
+
+            if distancia < umbral:
+                inliers.append([puntos_fuente[i], puntos_destino[i]])
+
+        if len(inliers) > len(max_inliers):
+            max_inliers = inliers
+            homografia_final = np.copy(homografia)
+
+        j +=1
+
+    return homografia_final, max_inliers
+
+
+def panorama_imagenes_ransac_propio(imagenes):
+
+    """
+    Funcion para crear un panorama entre N imagenes
+    """
+
+    # se supone que estan ordenadas de derecha a izquierda
+    # centro sera la posicion donde esta en imagenes la imagen central
+    centro = len(imagenes) // 2
+
+    # calculamos el tamaño para el resultado
+    # aqui nos ponemos en el peor de los casos y creamos el resultado
+    # más grande de lo que deberíamos, luego lo ajustamos
+    tam_resul_x = 0
+    tam_resul_y = 0
+
+    for imagen in imagenes:
+        tam_resul_x += imagen.shape[1]
+        tam_resul_y += imagen.shape[0]
+
+    desp_homo_x = tam_resul_x // 2
+    desp_homo_y = tam_resul_y // 2
+
+    resultado = np.zeros( ( tam_resul_x, tam_resul_y ) , dtype = np.uint8 )
+    resultado = cv.cvtColor(resultado, cv.COLOR_BGR2RGB)
+
+    imagen_central = normaliza_imagen_255(imagenes[centro])
+
+    # creamos la homografia inicial. Como vamos a comenzar con la imagen central
+    # el desplazamiento es la mitad del cuadro de resultado generado, para
+    # ponerla en el centro
+    homografia = np.array( [[1, 0, desp_homo_x],
+                            [0, 1, desp_homo_y],
+                            [0, 0, 1]], dtype = np.float64 )
+
+    # ponemos la imagen central
+    resultado = cv.warpPerspective(imagen_central, homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
+
+
+    # volvemos a la homografia inicial, ya que empezamos desde el inicio, pero
+    # hacia la izquierda
+    copia_homografia = np.copy(homografia)
+
+    # parte izquierda del panorama
+    for i in range(centro, 0, -1):
+        destino = imagenes[i]
+        fuente = imagenes[i - 1]
+
+        # sacamos puntos de interes y descriptores
+        puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.01)
+        puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.01)
+
+        # sacamos coincidencias
+        coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores_destino, descriptores_fuente)
+
+        puntos_destino = []
+        puntos_fuente = []
+
+        # sacamos los puntos de las coincidencias
+        for coincidencia in coincidencias:
+            puntos_destino.append(puntos_interes_destino[coincidencia.queryIdx].pt)
+            puntos_fuente.append(puntos_interes_fuente[coincidencia.trainIdx].pt)
+
+        puntos_destino = np.array(puntos_destino, dtype = np.float32)
+        puntos_fuente = np.array(puntos_fuente, dtype = np.float32)
+
+        # al igual que antes, obtenemos la homografia
+        homografia_cv, _ = ransac(puntos_fuente, puntos_destino, 5)
+        # la apilamos con las anteriores
+        copia_homografia = np.dot(copia_homografia, homografia_cv)
+
+        copia_fuente = normaliza_imagen_255(fuente)
+
+        # y la aplicamos
+        resultado = cv.warpPerspective(copia_fuente, copia_homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
+
+    # guardamos el extremo utilizado por la homografia, para recortar la imagen.
+    # en este caso no necesitamos aplicar un ajuste ya que la imagen se ha colocado
+    # en la derecha de este punto, y nos interesa el extremo izquierdo
+    ancho_min = copia_homografia[1][2]
+    alto_min = copia_homografia[0][2]
+
+    ancho_min = int(ancho_min)
+    alto_min = int(alto_min)
+
+
+
+    # hacemos una copia de la homografia
+    copia_homografia = np.copy(homografia)
+
+    # parte derecha del panorama
+    for i in range ( centro, len(imagenes) - 1 ):
+
+        destino = imagenes[i]
+        fuente = imagenes[i + 1]
+
+        # sacamos los puntos y descriptores de cada imagen
+        puntos_interes_destino, descriptores_destino = puntos_descriptores_AKAZE(destino, 0.01)
+        puntos_interes_fuente, descriptores_fuente = puntos_descriptores_AKAZE(fuente, 0.01)
+
+        # las coincidencias con lowe 2NN
+        coincidencias = coincidencias_descriptores_lowe_average_2nn(descriptores_destino, descriptores_fuente)
+
+        puntos_destino = []
+        puntos_fuente = []
+
+        # sacamos los puntos de destino y fuente donde hay coincidencias
+        for coincidencia in coincidencias:
+            puntos_destino.append(puntos_interes_destino[coincidencia.queryIdx].pt)
+            puntos_fuente.append(puntos_interes_fuente[coincidencia.trainIdx].pt)
+
+        puntos_destino = np.array(puntos_destino, dtype = np.float32)
+        puntos_fuente = np.array(puntos_fuente, dtype = np.float32)
+
+
+        # obtenemos la homografia donde iría la imagen
+        homografia_cv, _ = ransac(puntos_fuente, puntos_destino, 5)
+        # aplicamos una multiplicacion matricual para actualizar la homografia
+        # que estamos usando, de cara a que se apilen las transformaciones
+        # de forma que se vayan posicionando de forma correcta el resultado
+        copia_homografia = np.dot(copia_homografia, homografia_cv)
+
+        copia_fuente = normaliza_imagen_255(fuente)
+
+        # por ultimo, añadimos la imagen al resultado con warpPerspective
+        resultado = cv.warpPerspective(copia_fuente, copia_homografia, (tam_resul_x, tam_resul_y), dst=resultado, borderMode = cv.BORDER_TRANSPARENT)
+
+
+    # cuando hacemos todas las de la parte derecha, sabemos hasta donde ha llegado
+    # para recortar el resultado. Añadimos cierto margen, ya que al deformar las
+    # imagenes y el propio tamaño de la imagen hace que necesitemos más espacio
+    ancho_max = copia_homografia[1][2] + imagenes[len(imagenes) - 1].shape[0] * 1.4
+    alto_max = copia_homografia[0][2] + imagenes[len(imagenes) - 1].shape[1] * 1.4
+
+    # lo pasamos a entero
+    ancho_max = int(ancho_max)
+    alto_max = int(alto_max)
+
+    # el resultado es el resultado original, pero recortando toda la zona negra sin utilizar
+    resultado = resultado[ancho_min:ancho_max, alto_min:alto_max ]
+
+    return resultado
+
+
+
+# hacemos el panorama de la etsiit y de las dos imagenes de yosemite
+
+panorama_yosemite = panorama_imagenes_ransac_propio([yosemite_1_color, yosemite_2_color] )
+mostrar_imagen(panorama_yosemite)
+input("---------- Pulsa una tecla para continuar ----------")
+
+
+panorama_etsiit = panorama_imagenes_ransac_propio(imagenes_etsiit)
+
+# mostramos los resultados
+mostrar_imagen(panorama_etsiit)
+input("---------- Pulsa una tecla para continuar ----------")
+
