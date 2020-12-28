@@ -897,6 +897,7 @@ Bonus 1:
 """
 
 def calcular_homografia(puntos_fuente, puntos_destino):
+    # funcion para calcular una homografia a partir de dos listas de puntos
 
     valores_matriz = []
     i = 0
@@ -924,6 +925,7 @@ def calcular_homografia(puntos_fuente, puntos_destino):
 
 
 def calcular_distancia(punto1, punto2, homografia):
+    # calcular la distancia entre dos puntos relacionados por una homografia
 
     p1 = np.transpose(np.array([punto1[0], punto1[1], 1]) )
     estimacionp2 = np.dot(homografia, p1)
@@ -937,27 +939,33 @@ def calcular_distancia(punto1, punto2, homografia):
 
 def ransac(puntos_fuente, puntos_destino, umbral):
 
+    # algoritmo ransac, con respecto al paper de la bibligrafia
 
     max_inliers = []
     homografia_final = np.zeros((3,3))
 
     j = 0
 
+    # paramos si hemos dado las iteraciones dadas por el umbral, o si tenemos suficientes inliers
     while len(max_inliers) < len(puntos_fuente) * umbral and j < umbral:
 
-        # buscamos 5 correspondencias aleatorias
+        # 1: buscamos 1 correspondencias aleatorias
         cAleatorias = np.random.choice(len(puntos_fuente), 4, replace = False)
 
+        # 2: calculamos la homografia
         homografia = calcular_homografia(puntos_fuente[cAleatorias], puntos_destino[cAleatorias])
 
         inliers = []
 
+        # 3: aplicamos la homografia a todos los puntos
         for i in range(len(puntos_fuente)):
             distancia = calcular_distancia(puntos_fuente[i], puntos_destino[i], homografia)
 
+            # 4: si la distancia es menor a un umbral, lo contamos con inlier
             if distancia < umbral:
                 inliers.append([puntos_fuente[i], puntos_destino[i]])
 
+        # si esta homografia produce mas inliers, actualizamos la homografia de resultado
         if len(inliers) > len(max_inliers):
             max_inliers = inliers
             homografia_final = np.copy(homografia)
