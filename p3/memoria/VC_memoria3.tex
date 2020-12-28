@@ -268,9 +268,39 @@ La escala  2  tiene  31  puntos
 
 Como era de esperar, se eliminan muchos de los puntos de interes obtenidos, aunque los parámetros son los mismos a excepción del umbral, por lo que este parámetro nos puede ayudar a ajustar el número de puntos a obtener manteniendo la forma de calcular los distintos puntos, al mantener los tamaños de bloque, ksize, entre otros.
 
+
+
+Por último para este ejercicio compararemos los puntos originales con los puntos corregidos.
+
+Para realizar esta comparación se han escogido tres puntos al azar donde su posición original es distinta a la posición corregida, y se han dibujado como círculos de radio 2 píxeles en la imagen, para despues mostrar una ventana de 9x9 como nos piden, de forma que se distinga la posición de los puntos. El resultado es el siguiente, con el punto original en azul y en rojo el corregido:
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{cmp_p1.png}
+ 		\caption{Primer punto corregido escogido al azar.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{cmp_p2.png}
+ 		\caption{Segundo punto corregido escogido al azar.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{cmp_p3.png}
+ 		\caption{Tercer punto corregido escogido al azar.}
+\end{figure}
+
+
+Se puede observar como se modifican ligeramente las posiciones de los puntos, y a excepción del tercer punto donde todo el fondo es azul claro, en los otros dos casos se mmueve a una zona donde hay una mayor variación entre píxeles.
+
+
 \section{Descriptores AKAZE y correspondencias entre dos imágenes}
 
-En este apartado nos centraremos en dectecar los puntos de interes así como sus descriptores utilizando AKAZE, la versión acelerada de KAZE,
+En este apartado nos centraremos en dectecar los puntos de interes así como sus descriptores utilizando AKAZE\cite{akaze}, la versión acelerada de KAZE\cite{kaze}.
+
+Para este ejercicio
 
 \section{Mosaico de imágenes}
 
