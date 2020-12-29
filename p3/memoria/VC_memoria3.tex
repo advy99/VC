@@ -412,6 +412,59 @@ Como prueba de consistencia del algoritmo implementado he realizado la prueba co
 \end{figure}
 
 
+\newpage
+
+
+\section{Bonus: Implementación propia de RANSAC}
+
+De apartado opcional se nos pide implementar el algoritmo RANSAC para el cálculo de la homografía dados los puntos de interes de dos imágenes. Para desarrollar este apartado me he basado en el trabajo de Harshal Patil y de Prof.S.S.Deshmukh\cite{ransac} de cara a realizar una implementación en tiempo real del algoritmo RANSAC.
+
+Esta implementación se basa en 7 pasos:
+
+\begin{enumerate}
+	\item Escoger cuatro puntos aleatorios de la lista de entre los puntos coincidentes.
+	\item Obtener la homografía que relaciona esos cuatro puntos.
+	\item Aplicar la homografía obtenida a toda la lista de puntos de correspondencias.
+	\item Buscar la distancia entre los puntos usando la homografía.
+	\item Si la distancia es menor que un umbral dado por el usuario, es un punto inlier.
+	\item Volver a repetir el bucle hasta el máximo de iteraciones o tenemos suficientes puntos inlier.
+	\item La homografía que más puntos inlier consiga es la mejor homografía y por tanto el resultado.
+\end{enumerate}
+
+
+Este algoritmo solo necesitará de entrada ambas listas de puntos, y el umbral a utilizar. Tras esto, he creado una función exactamente igual a la función del apartado 4, pero utilizando este método en lugar del método \texttt{findHomography} de OpenCV, aunque usando en ambos casos el mismo umbral, obteniendo los siguientes resultados:
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{mosaico_yosemite_ransac_propio.png}
+ 		\caption{Mosaico de las imágenes de Yosemite utilizando la implementación propia de RANSAC.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{mosaico_etsiit_ransac_propio.png}
+ 		\caption{Mosaico de todas las imágenes de las vistas de la ETSIIT utilizando la implementación propia de RANSAC.}
+\end{figure}
+
+
+Vemos que a primera vista no hay diferencias entre la implementación propia y el uso de OpenCV, por lo que voy a mostrar una comparación directa de cada pareja de imágenes en una misma figura:
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{cmp_ransac_cv_propio.png}
+ 		\caption{Comparación entre mosaicos: A la izquierda utilizando OpenCV, a la derecha la implementación de RANSAC.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+      \includegraphics[width=\textwidth]{cmp_ransac_cv_propio_etsiit.png}
+ 		\caption{Comparación entre mosaicos: A la izquierda utilizando OpenCV, a la derecha la implementación de RANSAC.}
+\end{figure}
+
+
+En esta comparación, en especial el mosaico de la ETSIIT al ser más imágenes, si que percibimos una cierta diferencia en las imágenes de los extremos, que no coinciden exactamente los puntos en ambas soluciones. Esto sin embargo se trata de un error de redondeo a la hora de calcular la homografía, ya que OpenCV no conocemos como realiza la aproximación en profundidad y nuestra implementación propia está utilizando NumPy con números de coma flotante lo que añade cierto error de precisión en los cálculos.
+
+Como conclusión, creo que mi aproximación del algoritmo es bastante buena, ya que es capaz de trabajar correctamente con todos los apartados antes desarrollados de la práctica sin tener que aplicar ninguna modificación (en la función para crear el panorama simplemente se ha cambiado la llamada a la función) y obtiene unos buenos resultados como he comentado.
 
 \newpage
 
@@ -445,6 +498,11 @@ Como prueba de consistencia del algoritmo implementado he realizado la prueba co
 
 		\url{https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf}
 
+	\bibitem{ransac}
+
+		Homography Estimation Using RANSAC --- Harshal Patil, Prof.S.S.Deshmukh
+
+		\url{http://www.ijreat.org/Papers\%202013/Issue3/IJREATV1I3027.pdf}
 
 \end{thebibliography}
 
