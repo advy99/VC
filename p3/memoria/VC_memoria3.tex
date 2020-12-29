@@ -189,14 +189,14 @@ En mayor detalle, para cada escala (nivel de la pirámide construida), realizare
 	\item Supresión de no máximos: Dado un tamaño de ventana, recorreremos la imagen actual con ese tamaño de ventana, obteniendo el valor máximo de la ventana actual, y si el centro de la ventana (pixel actual) es el máximo, almacenaremos ese valor en el resultado, si no, lo descartaremos.
 	\item Estimación de la escala de los puntos en píxeles: Como nos dice en el guión, haremos una estimación de la escala de forma que sea igual a $2^{nivel\_piramide - 1} \cdot tam\_bloque$.
 	\item Calculo de la orientación de los puntos: Utilizando el gradiente de los puntos considerados de interes, calcularemos la norma de dichos puntos y con eso su orientación. Como nos dice el guión, en este apartado utilizaremos el gradiente de las imágenes aplicandole un alisamiento con $\sigma = 4.5$.
-	\item Calculo del KeyPoint de OpenCV utilizando el método \texttt{KeyPoint} y los valores calculados.
+	\item Calculo del KeyPoint de OpenCV utilizando el método \texttt{KeyPoint}\cite{keypoint} y los valores calculados.
 \end{enumerate}
 
 Y con esto ya tendremos los puntos de interes. Además de estos puntos, la función implementada devolverá los puntos corregidos, que son calculados de la siguiente forma:
 
 \begin{enumerate}
 	\item Concatenar los valores de X e Y de los puntos en un vector fila, de cara a poder utilizarlos en el siguiente punto.
-	\item Utilizar el método \texttt{cornerSubPix} como nos dice el guión para obtener los puntos corregidos, usando como criterio de parada quince iteraciones o un epsilon menos a $0.01$. Se han escogido estos valores ya que han funcionado bastante bien de forma empírica.
+	\item Utilizar el método \texttt{cornerSubPix}\cite{cornerSubPix} como nos dice el guión para obtener los puntos corregidos, usando como criterio de parada quince iteraciones o un epsilon menos a $0.01$. Se han escogido estos valores ya que han funcionado bastante bien de forma empírica.
 	\item Redondeo y adaptación de los ejes de los puntos obtenidos por la función \texttt{cornerSubPix}.
 \end{enumerate}
 
@@ -212,7 +212,7 @@ Como vemos, en este apartado tenemos bastantes parámetros con los que trabajar:
 	\item Tamaño del kernel para calcular las derivadas: En este caso también se nos recomendaban los valores de ksize de tres o cinco, y en mi caso he optado por el valor tres ya que se comportaba de forma correcta.
 \end{enumerate}
 
-Tras describir la función con la que obtenemos los puntos Harris a las distintas escalas, para visualizarlos simplemente se ha usado una lista con todos los puntos (de todas las escalas), y se ha utilizado el método \texttt{drawKeypoints} para dibujarlos sobre la imagen, utilizando la opción\\  \texttt{DRAW\_MATCHES\_FLAGS\_DRAW\_RICH\_KEYPOINTS} de forma que dibujará los puntos acorde a la escala, y con su orientación.
+Tras describir la función con la que obtenemos los puntos Harris a las distintas escalas, para visualizarlos simplemente se ha usado una lista con todos los puntos (de todas las escalas), y se ha utilizado el método \texttt{drawKeypoints}\cite{drawKeypoints} para dibujarlos sobre la imagen, utilizando la opción\\  \texttt{DRAW\_MATCHES\_FLAGS\_DRAW\_RICH\_KEYPOINTS} de forma que dibujará los puntos acorde a la escala, y con su orientación.
 
 Otro detalle a tener en cuenta es que aunque se ha utilizado la imagen en blanco y negro para obtener los puntos (como nos recomendaba el guión y nos obliga OpenCV), se han mostrado sobre la imagen a color para quela distinción de los puntos sobre la imagen sea más llamativa. Se ha obtenido el siguiente resultado:
 
@@ -300,22 +300,22 @@ Se puede observar como se modifican ligeramente las posiciones de los puntos, y 
 
 En este apartado nos centraremos en dectecar los puntos de interes así como sus descriptores utilizando AKAZE\cite{akaze}, la versión acelerada de KAZE\cite{kaze}.
 
-Para este ejercicio se ha hecho uso del método \texttt{AKAZE\_create} de OpenCV para crear un objeto de la clase AKAZE, con el que calcularemos los puntos clave y los descriptores de la imagen.
+Para este ejercicio se ha hecho uso del método \texttt{AKAZE\_create}\cite{cAKAZE} de OpenCV para crear un objeto de la clase AKAZE, con el que calcularemos los puntos clave y los descriptores de la imagen.
 
 Aunque se han utilizado los parámetros por defecto, he añadido el parámetro de umbral de cara a crear el detector AKAZE. Este umbral será el umbral será el umbral para aceptar un punto y usaremos el valor por defecto en OpenCV, $0.1$.
 
-Para obtener los descriptores y los puntos clave, simplemente se llamará a la función \texttt{detectAndCompute} de la instancia creada de AKAZE.
+Para obtener los descriptores y los puntos clave, simplemente se llamará a la función\\ \texttt{detectAndCompute}\cite{detectCompute} de la instancia creada de AKAZE.
 
 
-Una vez tenemos los descriptores y puntos de dos imágenes necesitamos encontrar las coincidencias entre estos dos. Para esto usaremos dos métodos, ambos utilizando un objeto de la clase \texttt{BFMatcher} de OpenCV:
+Una vez tenemos los descriptores y puntos de dos imágenes necesitamos encontrar las coincidencias entre estos dos. Para esto usaremos dos métodos, ambos utilizando un objeto de la clase \texttt{BFMatcher}\cite{BFMatcher} de OpenCV:
 
 \begin{enumerate}
-	\item Fuerza bruta con validación cruzada: Utilizando el método \texttt{match}, pasando como argumento los descriptores de ambas imágenes, obtendremos las coincidencias utilizando un algoritmo de fuerza bruta. Para utilizar validación cruzada será necesario establecer el parámetro \texttt{crossCheck} a verdadero en la creación del objeto BFMatcher.
-	\item Clasificador 2NN aplicando el criterio de Lowe: Al igual que el anterior, pero en lugar de utilizar el método \texttt{match} utilizaremos el método \texttt{knnMatch} con $k = 2$, y al resultado le aplicaremos el criterio de Lowe. Este criterio se basa en eliminar todas las coincidencias donde el radio de la distancia entre los puntos es mayor que el $0.8$, consiguiendo eliminar alrededor de un 90\% de falsos positivos, y eliminando únicamente alrededor de un 5\% de coincidencias reales\cite{lowe}.
+	\item Fuerza bruta con validación cruzada: Utilizando el método \texttt{match}\cite{match}, pasando como argumento los descriptores de ambas imágenes, obtendremos las coincidencias utilizando un algoritmo de fuerza bruta. Para utilizar validación cruzada será necesario establecer el parámetro \texttt{crossCheck} a verdadero en la creación del objeto BFMatcher.
+	\item Clasificador 2NN aplicando el criterio de Lowe: Al igual que el anterior, pero en lugar de utilizar el método \texttt{match} utilizaremos el método \texttt{knnMatch}\cite{knnMatch} con $k = 2$, y al resultado le aplicaremos el criterio de Lowe. Este criterio se basa en eliminar todas las coincidencias donde el radio de la distancia entre los puntos es mayor que el $0.8$, consiguiendo eliminar alrededor de un 90\% de falsos positivos, y eliminando únicamente alrededor de un 5\% de coincidencias reales\cite{lowe}.
 \end{enumerate}
 
 
-Una vez tenemos tanto los puntos clave como las coincidencias, dibujamos los resultados utilizando el método de OpenCV \texttt{drawMatches}. Como nos dice el guión, escogeremos cien coincidencias aleatorias y solo dibujaremos esas, de cara a poder distinguir con claridad los resultados:
+Una vez tenemos tanto los puntos clave como las coincidencias, dibujamos los resultados utilizando el método de OpenCV \texttt{drawMatches}\cite{drawMatches}. Como nos dice el guión, escogeremos cien coincidencias aleatorias y solo dibujaremos esas, de cara a poder distinguir con claridad los resultados:
 
 \begin{figure}[H]
   \centering
@@ -350,8 +350,8 @@ Gracias al uso de homografías conseguiremos crear mosaicos entre dos imágenes 
 \begin{enumerate}
 	\item Calculamos los puntos clave y los descriptores de las imágenes A y B.
 	\item Buscamos las coincidencias entre los puntos clave.
-	\item Calculamos la homografía que relaciona ambas imágenes utilizando el método \texttt{findHomography} de OpenCV.
-	\item Fusionamos ambas imágenes utilizando el método \texttt{warpPerspective} de OpenCV y la homografía calculada en el paso anterior. Como nos sugiere el guión de la práctica, usaré como borde \texttt{BORDER\_TRANSPARENT} de cara a que no se perciba el borde en el resultado.
+	\item Calculamos la homografía que relaciona ambas imágenes utilizando el método\\ \texttt{findHomography}\cite{findHomography} de OpenCV.
+	\item Fusionamos ambas imágenes utilizando el método \texttt{warpPerspective}\cite{warpPerspective} de OpenCV y la homografía calculada en el paso anterior. Como nos sugiere el guión de la práctica, usaré como borde \texttt{BORDER\_TRANSPARENT} de cara a que no se perciba el borde en el resultado.
 \end{enumerate}
 
 De esta forma obtendremos el mosaico entre dos imágenes A y B.
@@ -523,7 +523,7 @@ Como conclusión, creo que mi aproximación del algoritmo es bastante buena, ya 
 
 		\url{https://docs.opencv.org/master/dd/d1a/group__imgproc__feature.html#ga354e0d7c86d0d9da75de9b9701a9a87e}
 
-	\bibitem{drawkKeypoints}
+	\bibitem{drawKeypoints}
 
 		drawKeypoints --- Documentación oficial de OpenCV
 
