@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Antonio David Villegas Yeguas
 
 import cv2 as cv
 import matplotlib.pyplot as plt
