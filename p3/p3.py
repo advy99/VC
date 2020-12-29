@@ -494,6 +494,8 @@ def dibujar_puntos_harris( imagen, puntos ):
 
 np.random.seed(123)
 
+print("\n Apartado 1 \n")
+
 # probamos el codigo
 yosemite_1_bn = leeimagen("imagenes/Yosemite1.jpg", 0)
 yosemite_1_color = leeimagen("imagenes/Yosemite1.jpg", 1)
@@ -672,6 +674,7 @@ def dibujar_coincidencias(imagen1, imagen2, puntos_clave1, puntos_clave2, coinci
     return imagen_resultado
 
 
+print("\n Apartado 2 \n")
 
 # probamos la funcion
 puntos_yosemite1, descriptores_yosemite1 = puntos_descriptores_AKAZE(yosemite_1_bn, 0.01)
@@ -877,14 +880,21 @@ imagenes_etsiit = []
 for imagen in mosaico_etsiit:
     imagenes_etsiit.append(leeimagen(imagen, 1))
 
+print("\n Apartado 3 \n")
+
 # hacemos el panorama de la etsiit y de las dos imagenes de yosemite
 panorama_etsiit_3 = panorama_3_imagenes(*imagenes_etsiit[2:5])
+
+
+mostrar_imagen(panorama_etsiit_3)
+input("---------- Pulsa una tecla para continuar ----------")
+
+print("\n Apartado 4 \n")
+
 panorama_etsiit = panorama_imagenes(imagenes_etsiit)
 panorama_yosemite = panorama_2_imagenes(yosemite_1_color, yosemite_2_color)
 
 # mostramos los resultados
-mostrar_imagen(panorama_etsiit_3)
-input("---------- Pulsa una tecla para continuar ----------")
 mostrar_imagen(panorama_yosemite)
 input("---------- Pulsa una tecla para continuar ----------")
 mostrar_imagen(panorama_etsiit)
@@ -895,6 +905,8 @@ input("---------- Pulsa una tecla para continuar ----------")
 """
 Bonus 1:
 """
+
+print("\n BONUS 1 \n")
 
 def calcular_homografia(puntos_fuente, puntos_destino):
     # funcion para calcular una homografia a partir de dos listas de puntos
@@ -1122,14 +1134,16 @@ def panorama_imagenes_ransac_propio(imagenes):
 
 # hacemos el panorama de la etsiit y de las dos imagenes de yosemite
 
-panorama_yosemite = panorama_imagenes_ransac_propio([yosemite_1_color, yosemite_2_color] )
-mostrar_imagen(panorama_yosemite)
+panorama_yosemite_propio = panorama_imagenes_ransac_propio([yosemite_1_color, yosemite_2_color] )
+mostrar_imagen(panorama_yosemite_propio)
+mostrar_imagenes([panorama_yosemite, panorama_yosemite_propio])
 input("---------- Pulsa una tecla para continuar ----------")
 
 
-panorama_etsiit = panorama_imagenes_ransac_propio(imagenes_etsiit)
+panorama_etsiit_ransac_propio = panorama_imagenes_ransac_propio(imagenes_etsiit)
 
 # mostramos los resultados
-mostrar_imagen(panorama_etsiit)
+mostrar_imagen(panorama_etsiit_ransac_propio)
+mostrar_imagenes([panorama_etsiit, panorama_etsiit_ransac_propio])
 input("---------- Pulsa una tecla para continuar ----------")
 
